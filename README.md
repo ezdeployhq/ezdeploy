@@ -1,5 +1,8 @@
 # EZdeploy
 
+[![CI](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml/badge.svg)](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+
 EZdeploy is an open-source, agent-native internal application delivery platform. An employee copies one deployment prompt from the application center into a coding agent. The agent reads EZdeploy's public capability document, previews a deployment plan without consuming the single-use code, waits for explicit confirmation, exchanges the code for a short-lived scoped session, deploys the exact confirmed plan, verifies application health, and returns a live enterprise URL.
 
 ## Product boundary
@@ -12,7 +15,8 @@ EZdeploy does not aim to become a general container platform, Kubernetes distrib
 
 EZdeploy is being prepared for its first public `0.1.0` release under Apache-2.0. The core
 deployment workflow is implemented and tested; Cloudflare setup still requires operator-owned
-infrastructure and security review. See [CONTRIBUTING.md](./CONTRIBUTING.md),
+infrastructure and security review. The source repository is
+[jingchang0623-crypto/ezdeploy](https://github.com/jingchang0623-crypto/ezdeploy). See [CONTRIBUTING.md](./CONTRIBUTING.md),
 [SECURITY.md](./SECURITY.md), and the [release checklist](./docs/open-source-release.md).
 
 ## Deployment contract

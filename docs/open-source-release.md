@@ -2,7 +2,7 @@
 
 ## Repository readiness
 
-- Choose the final GitHub organization and repository slug, preferably `ezdeploy`.
+- Repository created at `jingchang0623-crypto/ezdeploy`; keep it private through validation.
 - Confirm that all code and assets can be distributed under Apache-2.0.
 - Run `npm run typecheck`, `npm test`, `npm run build`, and dependency review.
 - Run secret scanning against the complete Git history, not only the current files.
@@ -24,5 +24,5 @@
 5. Publish npm packages only if zero-install distribution needs them; source availability does
    not require npm publication.
 
-Do not publish the current local repository until the GitHub owner, security contact, and public
-support policy have been chosen.
+Do not make the repository public until private vulnerability reporting is enabled, the support
+policy is accepted, and a clean-account Cloudflare installation has passed.

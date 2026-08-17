@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "Agent-native internal application delivery platform",
+  "homepage": "https://github.com/jingchang0623-crypto/ezdeploy#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jingchang0623-crypto/ezdeploy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jingchang0623-crypto/ezdeploy/issues"
+  },
   "type": "module",
   "workspaces": [
     "apps/*",

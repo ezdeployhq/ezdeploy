@@ -3,8 +3,9 @@
 ## Reporting a vulnerability
 
 Do not open a public issue for a suspected vulnerability. Use GitHub's private vulnerability
-reporting feature for the repository. Until that feature is enabled, contact a maintainer
-privately through the address published in the repository owner's GitHub profile.
+reporting feature for the repository. Until that feature is enabled, contact
+[@jingchang0623-crypto](https://github.com/jingchang0623-crypto) privately through the address
+published in the maintainer's GitHub profile.
 
 Include the affected version, impact, reproduction steps, and any suggested mitigation. We aim
 to acknowledge reports within five business days. Disclosure timing will be coordinated after a

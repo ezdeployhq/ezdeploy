@@ -8,5 +8,6 @@ Harassment, discriminatory language, threats, doxxing, and sustained disruption 
 acceptable. Maintainers may edit or remove contributions and temporarily or permanently exclude
 participants whose conduct is harmful to the community.
 
-Report conduct concerns privately through the repository owner's GitHub profile. Maintainers
-will handle reports confidentially and avoid conflicts of interest when assigning a reviewer.
+Report conduct concerns privately to
+[@jingchang0623-crypto](https://github.com/jingchang0623-crypto). Maintainers will handle reports
+confidentially and avoid conflicts of interest when assigning a reviewer.
