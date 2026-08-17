@@ -3,8 +3,8 @@ export const landingPage = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="EZdeploy 是零安装、Agent 可发现的企业应用部署与分发中心。">
-  <title>EZdeploy — 一句话，把应用带到公司里</title>
+  <meta name="description" content="EZdeploy 是零安装、Agent 可发现的个人应用部署与管理中心。">
+  <title>EZdeploy — 一句话，部署你的应用</title>
   <style>
     :root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Arial,sans-serif;color:#1d1d1f;background:#fff;--blue:#0071e3;--blue-hover:#0077ed;--muted:#6e6e73;--surface:#f5f5f7;--line:#d2d2d7}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;overflow-x:hidden}a{color:inherit}button,a{-webkit-tap-highlight-color:transparent}
@@ -35,55 +35,100 @@ export const landingPage = `<!doctype html>
 </head>
 <body>
   <nav class="nav"><div class="nav-inner">
-    <a class="brand" href="/"><i>Zao</i>Deploy</a>
+    <a class="brand" href="/"><i>EZ</i>deploy</a>
     <a class="nav-link" href="#workflow">工作方式</a>
     <a class="nav-link" href="#capabilities">基础能力</a>
     <a class="nav-link" href="/deploy">Agent 部署</a>
-    <a class="nav-cta" href="/center">员工登录</a>
+    <a class="nav-cta" href="/center">管理员登录</a>
   </div></nav>
 
   <main>
     <section class="hero">
-      <p class="eyebrow">企业应用部署中心</p>
-      <h1>一句话，<span>把应用带到公司里。</span></h1>
-      <p class="hero-copy">员工无需安装工具或配置云平台。把一段提示词交给 Codex、WorkBuddy 或其他编码 Agent，几分钟后获得企业应用链接。</p>
-      <div class="actions"><a class="button primary" href="/center">进入应用中心</a><a class="button text" href="#workflow">了解如何工作</a></div>
+      <p class="eyebrow">你的个人应用部署中心</p>
+      <h1>一句话，<span>把想法变成链接。</span></h1>
+      <p class="hero-copy">无需安装部署工具，也不用反复配置云平台。把一段提示词交给 Codex、WorkBuddy 或其他编码 Agent，几分钟后获得属于你的应用链接。</p>
+      <div class="actions"><a class="button primary" href="/center">进入我的应用中心</a><a class="button text" href="#workflow">了解如何工作</a></div>
       <div class="product-scene" aria-label="EZdeploy 应用中心预览">
         <div class="window">
           <div class="window-bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i><span class="window-title">apps.example.com</span></div>
           <div class="window-body">
             <div class="mock-nav"><div class="mock-logo">EZdeploy</div><div class="mock-line active"></div><div class="mock-line"></div><div class="mock-line"></div></div>
-            <div class="mock-main"><div class="mock-head"><strong>企业应用</strong><div class="mock-search"></div></div><div class="mock-apps"><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div></div></div>
+            <div class="mock-main"><div class="mock-head"><strong>我的应用</strong><div class="mock-search"></div></div><div class="mock-apps"><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div><div class="mock-app"><div class="mock-icon"></div><div class="mock-name"></div><div class="mock-meta"></div></div></div></div>
           </div>
         </div>
       </div>
     </section>
 
     <section class="section soft" id="workflow"><div class="section-inner">
-      <div class="kicker">零安装部署</div><h2>从当前项目，到企业应用。只差一次确认。</h2>
-      <p class="lead">EZdeploy 把身份、基础设施和发布流程隐藏在一段可复制的提示词后面，同时保留企业需要的安全确认。</p>
+      <div class="kicker">零安装部署</div><h2>从当前项目，到在线应用。只差一次确认。</h2>
+      <p class="lead">EZdeploy 把云资源、构建和发布流程收进一段可复制的提示词，同时把每一步部署计划清楚地交给你确认。</p>
       <div class="flow">
-        <div class="flow-item"><span class="flow-num">01</span><h3>复制提示词</h3><p>在应用中心生成与员工身份绑定的两小时一次性连接码。</p></div>
+        <div class="flow-item"><span class="flow-num">01</span><h3>复制提示词</h3><p>登录个人应用中心，生成两小时内有效的一次性连接码。</p></div>
         <div class="flow-item"><span class="flow-num">02</span><h3>Agent 识别项目</h3><p>自动判断运行时、构建方式以及数据库、存储和 AI 需求。</p></div>
         <div class="flow-item"><span class="flow-num">03</span><h3>确认部署计划</h3><p>在创建资源之前，清楚看到访问范围、能力绑定与健康检查。</p></div>
-        <div class="flow-item"><span class="flow-num">04</span><h3>获得应用链接</h3><p>域名、企业登录和健康验证全部通过后才返回正式地址。</p></div>
+        <div class="flow-item"><span class="flow-num">04</span><h3>获得应用链接</h3><p>域名和健康验证全部通过后，才向你返回正式访问地址。</p></div>
       </div>
     </div></section>
 
     <section class="section" id="capabilities"><div class="section-inner capability">
-      <div><div class="kicker">统一基础能力</div><h2>应用需要什么，平台就安全地提供什么。</h2><p class="lead">数据库、对象存储、员工鉴权和 AI Provider 由企业统一管理。应用只拿到自己的最小权限凭证。</p></div>
-      <div class="orbit" aria-hidden="true"><div class="sat db">数据库</div><div class="sat storage">对象存储</div><div class="core">EZdeploy<br>Control Plane</div><div class="sat auth">企业鉴权</div><div class="sat ai">AI Provider</div></div>
+      <div><div class="kicker">共享基础能力</div><h2>应用需要什么，你只配置一次。</h2><p class="lead">数据库、对象存储、管理员登录和 AI Provider 由你的部署中心统一管理。每个应用只获得自己的最小权限凭证。</p></div>
+      <div class="orbit" aria-hidden="true"><div class="sat db">数据库</div><div class="sat storage">对象存储</div><div class="core">EZdeploy<br>Control Plane</div><div class="sat auth">管理员登录</div><div class="sat ai">AI Provider</div></div>
     </div></section>
 
-    <section class="privacy"><h2>员工不接触主密钥。应用也不会。</h2><p>云平台和模型供应商凭证始终留在控制面。每个应用获得<strong>可撤销、可审计、最小权限</strong>的运行时能力。</p></section>
-    <section class="final"><h2>让下一次发布，只有一句话。</h2><p>登录企业应用中心，生成第一段部署提示词。</p><a class="button primary" href="/center">进入应用中心</a></section>
+    <section class="privacy"><h2>主密钥只留在你的控制面。</h2><p>云平台和模型供应商凭证不会进入项目或聊天。每个应用获得<strong>可撤销、可审计、最小权限</strong>的运行时能力。</p></section>
+    <section class="final"><h2>让下一次发布，只有一句话。</h2><p>登录个人应用中心，生成第一段部署提示词。</p><a class="button primary" href="/center">进入我的应用中心</a></section>
   </main>
-  <footer><div class="footer-inner">EZdeploy · 开源企业应用部署中心 <span>Agent-native · Zero-install · Self-hostable</span></div></footer>
+  <footer><div class="footer-inner">EZdeploy · 开源个人应用部署中心 <span>Agent-native · Zero-install · Self-hostable</span></div></footer>
   <script>
     const scene=document.querySelector('.product-scene');
     addEventListener('scroll',()=>{if(!scene||matchMedia('(prefers-reduced-motion: reduce)').matches)return;const y=Math.min(scrollY,700);scene.style.transform='translateY('+(y*.045)+'px) scale('+(1-y*.000035)+')'}, {passive:true});
   </script>
 </body></html>`;
+
+export function authPage(mode: "setup" | "login"): string {
+  const setup = mode === "setup";
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>${setup ? "设置管理员" : "管理员登录"} · EZdeploy</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",Arial,sans-serif;color:#1d1d1f;background:#f5f5f7;--blue:#0071e3;--muted:#6e6e73;--line:#d2d2d7}
+    *{box-sizing:border-box}body{margin:0;min-height:100svh;display:grid;grid-template-rows:auto 1fr;background:radial-gradient(circle at 50% 30%,#fff 0,#f5f5f7 58%)}
+    .topbar{height:56px;border-bottom:1px solid #0000000d;background:#ffffffc9;backdrop-filter:blur(20px)}.topbar-inner{width:min(1040px,calc(100% - 40px));height:100%;margin:auto;display:flex;align-items:center;justify-content:space-between}.brand{font-size:18px;font-weight:720;letter-spacing:-.045em;text-decoration:none;color:inherit}.brand i{font-style:normal;color:var(--blue)}.back{font-size:13px;color:var(--muted);text-decoration:none}.back:hover{color:#1d1d1f}
+    main{display:grid;place-items:center;padding:48px 20px 80px}.card{width:min(440px,100%);background:#fffc;border:1px solid #ffffffb8;border-radius:26px;padding:38px;box-shadow:0 26px 80px #0000000d;backdrop-filter:blur(24px)}
+    .mark{width:50px;height:50px;border-radius:15px;background:#1d1d1f;color:#fff;display:grid;place-items:center;font-weight:760;font-size:18px;letter-spacing:-.04em;margin-bottom:26px}.eyebrow{color:#bf4800;font-weight:650;font-size:13px;margin:0 0 9px}.card h1{font-size:34px;line-height:1.04;letter-spacing:-.05em;margin:0}.intro{color:var(--muted);line-height:1.55;font-size:15px;margin:13px 0 28px}
+    .field{display:grid;gap:7px;margin-top:17px}.field label{font-size:13px;font-weight:600}.field input{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:#fff;outline:none;font-size:16px}.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px #0071e326}.hint{font-size:12px;color:var(--muted);line-height:1.45}
+    .submit{width:100%;height:48px;border:0;border-radius:999px;background:var(--blue);color:#fff;font-weight:650;font-size:16px;margin-top:25px;cursor:pointer}.submit:hover{background:#0077ed}.submit:disabled{opacity:.55;cursor:wait}.error{min-height:20px;color:#d70015;font-size:13px;line-height:1.45;margin-top:14px;text-align:center}.privacy{text-align:center;color:#86868b;font-size:11px;line-height:1.5;margin:20px 14px 0}
+    @media(max-width:520px){main{padding:28px 14px 60px;align-items:start}.card{padding:28px 22px;border-radius:22px}.card h1{font-size:30px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><div class="topbar-inner"><a class="brand" href="/"><i>EZ</i>deploy</a><a class="back" href="/">返回首页</a></div></header>
+  <main><section class="card" aria-labelledby="auth-title">
+    <div class="mark" aria-hidden="true">EZ</div>
+    <p class="eyebrow">${setup ? "FIRST-TIME SETUP" : "PERSONAL ADMIN"}</p>
+    <h1 id="auth-title">${setup ? "创建你的管理员账号" : "欢迎回来"}</h1>
+    <p class="intro">${setup ? "这是此部署中心唯一的管理账号。设置完成后，你可以管理应用、部署连接和 AI Provider。" : "登录你的个人应用中心，继续部署和管理应用。"}</p>
+    <form id="authForm">
+      <div class="field"><label for="username">管理员账号</label><input id="username" name="username" autocomplete="username" minlength="3" maxlength="48" required autofocus></div>
+      <div class="field"><label for="password">密码</label><input id="password" name="password" type="password" autocomplete="${setup ? "new-password" : "current-password"}" minlength="10" maxlength="200" required>${setup ? '<div class="hint">至少 10 个字符。密码只用于生成不可逆派生值，不会明文保存。</div>' : ""}</div>
+      ${setup ? '<div class="field"><label for="confirm">确认密码</label><input id="confirm" name="confirm" type="password" autocomplete="new-password" minlength="10" maxlength="200" required></div>' : ""}
+      <button class="submit" id="submit" type="submit">${setup ? "完成设置并进入" : "登录"}</button>
+      <div class="error" id="error" role="alert" aria-live="polite"></div>
+    </form>
+    <p class="privacy">会话使用 HttpOnly 安全 Cookie，密码和会话令牌均不会明文写入数据库。</p>
+  </section></main>
+  <script>
+    const setup=${JSON.stringify(setup)};
+    const form=document.querySelector('#authForm');const error=document.querySelector('#error');const button=document.querySelector('#submit');
+    form.addEventListener('submit',async event=>{event.preventDefault();error.textContent='';const username=document.querySelector('#username').value.trim();const password=document.querySelector('#password').value;if(setup&&password!==document.querySelector('#confirm').value){error.textContent='两次输入的密码不一致';return}button.disabled=true;button.textContent=setup?'正在创建…':'正在登录…';try{const response=await fetch(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username,password})});const data=await response.json();if(!response.ok)throw Error(data.error?.message||'操作失败');location.href='/center'}catch(reason){error.textContent=reason.message||'操作失败';button.disabled=false;button.textContent=setup?'完成设置并进入':'登录'}});
+  </script>
+</body></html>`;
+}
 
 export const applicationPage = `<!doctype html>
 <html lang="zh-CN">
@@ -96,7 +141,7 @@ export const applicationPage = `<!doctype html>
     *{box-sizing:border-box}body{margin:0;min-height:100vh}button,input,textarea{font:inherit}button{cursor:pointer}a{color:inherit}
     .topbar{height:56px;position:sticky;top:0;z-index:20;background:rgba(250,250,252,.8);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(0,0,0,.06)}
     .topbar-inner{width:min(1180px,calc(100% - 40px));height:100%;margin:auto;display:flex;align-items:center;gap:28px}.brand{font-size:18px;font-weight:720;letter-spacing:-.045em;text-decoration:none}.brand i{font-style:normal;color:var(--blue)}
-    .nav{display:flex;gap:6px}.nav a{text-decoration:none;font-size:13px;color:#515154;padding:7px 12px;border-radius:999px;transition:.2s}.nav a:hover,.nav a.active{background:#e8e8ed;color:#1d1d1f}.identity{margin-left:auto;font-size:12px;color:var(--muted);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .nav{display:flex;gap:6px}.nav a{text-decoration:none;font-size:13px;color:#515154;padding:7px 12px;border-radius:999px;transition:.2s}.nav a:hover,.nav a.active{background:#e8e8ed;color:#1d1d1f}.account{margin-left:auto;display:flex;align-items:center;gap:10px}.identity{font-size:12px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.logout{border:0;background:none;color:#515154;font-size:12px;padding:7px 9px;border-radius:999px}.logout:hover,.logout:focus-visible{background:#e8e8ed;outline:none}
     main{width:min(1180px,calc(100% - 40px));margin:auto;padding:64px 0 100px}.view{display:none;animation:enter .35s ease both}.view.active{display:block}@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
     .page-head{display:flex;align-items:end;justify-content:space-between;gap:32px;margin-bottom:38px}.eyebrow{font-size:14px;color:#bf4800;font-weight:650;margin:0 0 10px}.page-head h1{font-size:clamp(42px,5vw,64px);line-height:1;letter-spacing:-.06em;margin:0}.page-head p{font-size:18px;line-height:1.45;color:var(--muted);margin:16px 0 0;max-width:620px}
     .primary{border:0;background:var(--blue);color:#fff;border-radius:999px;min-height:42px;padding:0 19px;font-weight:600;transition:transform .2s,background .2s}.primary:hover{background:#0077ed;transform:scale(1.02)}.secondary{border:0;background:#e8e8ed;color:#1d1d1f;border-radius:999px;min-height:40px;padding:0 17px}
@@ -115,25 +160,25 @@ export const applicationPage = `<!doctype html>
 </head>
 <body>
   <header class="topbar"><div class="topbar-inner">
-    <a class="brand" href="/"><i>Zao</i>Deploy</a>
-    <nav class="nav"><a data-path="/center" href="/center">企业应用</a><a data-path="/deploy" href="/deploy">AI 部署</a><a data-path="/settings/ai" href="/settings/ai">AI 设置</a></nav>
-    <div class="identity" id="identity">正在验证身份…</div>
+    <a class="brand" href="/"><i>EZ</i>deploy</a>
+    <nav class="nav"><a data-path="/center" href="/center">我的应用</a><a data-path="/deploy" href="/deploy">AI 部署</a><a data-path="/settings/ai" href="/settings/ai">AI 设置</a></nav>
+    <div class="account"><div class="identity" id="identity">正在验证身份…</div><button class="logout" id="logout" type="button">退出</button></div>
   </div></header>
   <main>
     <section class="view" id="catalog">
-      <div class="page-head"><div><p class="eyebrow">Application Center</p><h1>企业应用，一处打开。</h1><p>查找团队已经发布的应用，查看它们的基础能力和运行状态。</p></div><a class="primary" href="/deploy" style="display:inline-flex;align-items:center;text-decoration:none">部署新应用</a></div>
-      <div class="catalog-tools"><div class="search-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="search" id="search" placeholder="搜索应用、负责人或基础能力"></div><span class="count" id="count"></span></div>
+      <div class="page-head"><div><p class="eyebrow">My Application Center</p><h1>我的应用，一处打开。</h1><p>查看你已经发布的应用、基础能力和运行状态。</p></div><a class="primary" href="/deploy" style="display:inline-flex;align-items:center;text-decoration:none">部署新应用</a></div>
+      <div class="catalog-tools"><div class="search-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="search" id="search" placeholder="搜索应用或基础能力"></div><span class="count" id="count"></span></div>
       <div class="apps" id="apps"><div class="empty loading">正在读取应用目录…</div></div>
     </section>
     <section class="view" id="deploy">
       <div class="page-head"><div><p class="eyebrow">Zero-install Deploy</p><h1>交给 AI，几分钟上线。</h1><p>生成一段部署提示词，发送给正在处理项目的 Codex、WorkBuddy 或其他编码 Agent。</p></div><button class="primary" id="create">生成部署提示词</button></div>
       <div class="deploy-layout">
-        <div><div class="steps"><div class="step"><span class="num">1</span><div><h2>生成一次性连接码</h2><p>连接码与你的企业邮箱绑定，2 小时内有效且只能兑换一次。</p></div></div><div class="step"><span class="num">2</span><div><h2>复制给当前项目的 Agent</h2><p>Agent 通过公开说明页面发现协议，不需要提前安装 EZdeploy 或配置 MCP。</p></div></div><div class="step"><span class="num">3</span><div><h2>确认部署计划</h2><p>在创建资源之前查看运行时、数据库、存储、AI 和访问范围。</p></div></div><div class="step"><span class="num">4</span><div><h2>获得正式应用链接</h2><p>企业域名、访问策略和健康检查全部通过后，应用自动出现在这里。</p></div></div></div><p class="safety">连接码不是长期密钥。Agent 兑换得到的会话在 12 小时内保持有效，且不得写入项目、构建产物或最终回复。</p></div>
+        <div><div class="steps"><div class="step"><span class="num">1</span><div><h2>生成一次性连接码</h2><p>连接码只属于当前管理员，2 小时内有效且只能兑换一次。</p></div></div><div class="step"><span class="num">2</span><div><h2>复制给当前项目的 Agent</h2><p>Agent 通过公开说明页面发现协议，不需要提前安装 EZdeploy 或配置 MCP。</p></div></div><div class="step"><span class="num">3</span><div><h2>确认部署计划</h2><p>在创建资源之前查看运行时、数据库、存储、AI 和访问范围。</p></div></div><div class="step"><span class="num">4</span><div><h2>获得正式应用链接</h2><p>个人域名和健康检查全部通过后，应用自动出现在这里。</p></div></div></div><p class="safety">连接码不是长期密钥。Agent 兑换得到的会话在 12 小时内保持有效，且不得写入项目、构建产物或最终回复。</p></div>
         <aside class="session-panel"><h2>Agent 会话</h2><p>查看和撤销近期部署连接。</p><div id="connections"><div class="empty loading" style="padding:35px 0">正在读取…</div></div></aside>
       </div>
     </section>
     <section class="view" id="providers">
-      <div class="page-head"><div><p class="eyebrow">Organization Settings</p><h1>AI Provider</h1><p>集中配置模型供应商、默认模型和企业密钥。应用始终只使用 EZdeploy 签发的虚拟密钥。</p></div><button class="primary" id="addProvider">添加 Provider</button></div>
+      <div class="page-head"><div><p class="eyebrow">Personal Settings</p><h1>AI Provider</h1><p>集中配置你的模型供应商、默认模型和 API Key。应用始终只使用 EZdeploy 签发的虚拟密钥。</p></div><button class="primary" id="addProvider">添加 Provider</button></div>
       <div class="provider-layout">
         <div class="provider-list" id="providerList"><div class="empty loading">正在读取 Provider…</div></div>
         <aside class="provider-summary"><h2>默认模型路由</h2><p>所有请求中的 <code>default-chat</code> 会路由到当前默认 Provider。Embedding 暂时继续使用 Cloudflare Workers AI。</p><div class="route-line"><div class="route-label">CHAT COMPLETIONS</div><div class="route-value" id="defaultRoute">未配置，使用 Cloudflare 默认模型</div></div><div class="route-line"><div class="route-label">密钥安全</div><div class="route-value">AES-256-GCM 加密 · 永不回显完整密钥</div></div></aside>
@@ -151,9 +196,9 @@ export const applicationPage = `<!doctype html>
     document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.path===location.pathname));
     document.querySelector('#mobileCreate').style.display=current==='deploy'?'':'none';
     function initials(name){return String(name||'ZA').trim().split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase().slice(0,2)}
-    async function loadMe(){const r=await fetch('/api/me');if(!r.ok)throw Error('身份验证失败');state.me=await r.json();document.querySelector('#identity').textContent=state.me.email;if(!state.me.administrator)document.querySelector('[data-path="/settings/ai"]').style.display='none'}
+    async function loadMe(){const r=await fetch('/api/me');if(r.status===401){location.href='/login';return}if(!r.ok)throw Error('身份验证失败');state.me=await r.json();document.querySelector('#identity').textContent=state.me.username}
     async function loadApps(){const r=await fetch('/api/apps');if(!r.ok)throw Error('应用目录加载失败');state.apps=await r.json();drawApps()}
-    function drawApps(){const q=(document.querySelector('#search')?.value||'').toLowerCase();const rows=state.apps.filter(x=>JSON.stringify(x).toLowerCase().includes(q));document.querySelector('#count').textContent=rows.length+' 个应用';document.querySelector('#apps').innerHTML=rows.length?rows.map((x,i)=>{const url=x.deployment?.url||'#';const status=x.deployment?.status||'未发布';const preview=x.deployment?.url?'<iframe src="'+esc(encodeURI(x.deployment.url))+'" title="'+esc(x.application.displayName)+' 页面预览" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>':'';return '<a class="app" href="'+encodeURI(url)+'" target="_blank" rel="noreferrer"><div class="app-preview"><div class="preview-fallback"><div class="app-icon">'+esc(initials(x.application.displayName))+'</div></div>'+preview+'</div><div class="app-body"><h2>'+esc(x.application.displayName)+'</h2><div class="description">'+esc(x.application.description||x.application.slug)+'</div><div class="app-foot"><div class="status-line"><span class="status">'+esc(status)+'</span><span class="owner">'+esc(x.application.ownerId)+'</span></div><div class="caps">'+x.resources.map(r=>'<span class="cap">'+esc(({database:'数据库',storage:'对象存储',ai:'AI'}[r.kind]||r.kind))+'</span>').join('')+(x.access?.mode==='organization'?'<span class="cap">企业登录</span>':'<span class="cap">公开访问</span>')+'</div></div></div></a>'}).join(''):'<div class="empty">没有找到符合条件的应用</div>'}
+    function drawApps(){const q=(document.querySelector('#search')?.value||'').toLowerCase();const rows=state.apps.filter(x=>JSON.stringify(x).toLowerCase().includes(q));document.querySelector('#count').textContent=rows.length+' 个应用';document.querySelector('#apps').innerHTML=rows.length?rows.map((x,i)=>{const url=x.deployment?.url||'#';const status=x.deployment?.status||'未发布';const preview=x.deployment?.url?'<iframe src="'+esc(encodeURI(x.deployment.url))+'" title="'+esc(x.application.displayName)+' 页面预览" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>':'';return '<a class="app" href="'+encodeURI(url)+'" target="_blank" rel="noreferrer"><div class="app-preview"><div class="preview-fallback"><div class="app-icon">'+esc(initials(x.application.displayName))+'</div></div>'+preview+'</div><div class="app-body"><h2>'+esc(x.application.displayName)+'</h2><div class="description">'+esc(x.application.description||x.application.slug)+'</div><div class="app-foot"><div class="status-line"><span class="status">'+esc(status)+'</span></div><div class="caps">'+x.resources.map(r=>'<span class="cap">'+esc(({database:'数据库',storage:'对象存储',ai:'AI'}[r.kind]||r.kind))+'</span>').join('')+(x.access?.mode==='organization'?'<span class="cap">受保护访问</span>':'<span class="cap">公开访问</span>')+'</div></div></div></a>'}).join(''):'<div class="empty">还没有应用。生成部署提示词，把第一个项目交给 Agent 吧。</div>'}
     async function loadConnections(){const r=await fetch('/api/connections');if(!r.ok)throw Error('连接读取失败');const rows=await r.json();document.querySelector('#connections').innerHTML=rows.length?rows.map(x=>'<div class="connection"><div class="connection-head"><strong>'+esc(x.label||'Agent 会话')+'</strong><button onclick="revokeConnection(\\''+x.id+'\\')">撤销</button></div><div class="small">创建于 '+new Date(x.createdAt).toLocaleString()+'</div><div class="small">'+(x.expiresAt?'有效至 '+new Date(x.expiresAt).toLocaleString():(x.lastUsedAt?'最近使用 '+new Date(x.lastUsedAt).toLocaleString():'长期连接'))+'</div></div>').join(''):'<div class="empty" style="padding:35px 0">暂无有效 Agent 会话</div>'}
     const providerPresets={
       deepseek:{name:'DeepSeek',baseUrl:'https://api.deepseek.com',model:'deepseek-v4-flash',models:['deepseek-v4-flash','deepseek-v4-pro']},
@@ -182,6 +227,7 @@ export const applicationPage = `<!doctype html>
     async function revokeConnection(id){if(!confirm('撤销后，这个 Agent 会话将立即失效。继续吗？'))return;await fetch('/api/connections/'+id,{method:'DELETE'});await loadConnections()}window.revokeConnection=revokeConnection;
     document.querySelectorAll('[data-copy]').forEach(button=>button.onclick=async()=>{const target=document.querySelector('#'+button.dataset.copy);await navigator.clipboard.writeText(target.value??target.textContent);const old=button.textContent;button.textContent='已复制';setTimeout(()=>button.textContent=old,1200)});
     document.querySelector('#done').onclick=()=>document.querySelector('#keyDialog').close();
+    document.querySelector('#logout').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST'});location.href='/login'};
     const jobs=[loadMe()];if(current==='catalog')jobs.push(loadApps());else if(current==='deploy')jobs.push(loadConnections());else jobs.push(loadProviders());Promise.all(jobs).catch(error=>{const target=document.querySelector(current==='catalog'?'#apps':current==='deploy'?'#connections':'#providerList');target.innerHTML='<div class="empty">加载失败：'+esc(error.message)+'</div>'});
   </script>
 </body></html>`;

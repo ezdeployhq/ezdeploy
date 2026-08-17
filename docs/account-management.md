@@ -1,77 +1,37 @@
-# 企业账户与成员管理
+# 个人管理员账号
 
-EZdeploy 不保存员工密码。生产环境使用 Cloudflare Access 作为身份网关，
-由企业现有身份系统验证员工，EZdeploy 只接收已经验证的邮箱身份。
+EZdeploy 只保留一个个人管理员账号，不提供员工注册、多账号、团队、角色或成员邀请。
+公开首页无需登录；应用目录、AI 部署、AI Provider 设置和管理 API 均需要管理员会话。
 
-## 当前身份链路
+## 首次设置
 
-```text
-员工打开 /center 或 /deploy
-  -> Cloudflare Access
-  -> 企业身份提供商或邮件一次性验证码
-  -> Access 校验员工组
-  -> 将已验证邮箱传给 EZdeploy
-  -> EZdeploy 以邮箱记录应用所有者和 Agent 会话
-```
+首次打开 `/center` 时，如果 D1 中尚未创建管理员，EZdeploy 会跳转到 `/setup`：
 
-公开首页 `/` 不需要登录。应用目录、部署页面和 `/api/*` 继续受 Access 保护。
+1. 设置唯一的管理员账号；
+2. 设置至少 10 个字符的密码并再次确认；
+3. 创建成功后自动登录并进入个人应用中心。
 
-## 如何让员工使用
+管理员创建后 `/setup` 永久关闭并跳转到 `/login`。数据库约束只允许存在一条管理员
+记录，因此并发请求也不能创建第二个账号。
 
-### 小团队：邮件邀请
+## 登录与会话
 
-1. 在 Cloudflare Zero Trust 中启用 One-time PIN。
-2. 打开 Access 规则组 `EZdeploy Employees`。
-3. 将员工邮箱加入允许列表。
-4. 把 `https://apps.example.com/center` 发给员工。
-5. 员工输入企业邮箱并使用邮件验证码登录。
+密码通过 PBKDF2-HMAC-SHA256 和独立随机盐派生后保存，D1 不保存明文密码。登录成功
+后生成随机会话令牌；浏览器仅通过 `HttpOnly; Secure; SameSite=Lax` Cookie 保存令牌，
+D1 只保存令牌哈希。会话默认 30 天过期，退出登录会立即删除当前会话。
 
-员工不需要在 EZdeploy 注册账号或设置另一套密码。只有已被 Access 策略允许的
-邮箱会收到可用验证码。
+所有写操作都要求同源 `Origin`，登录失败按来源 IP 做 15 分钟窗口限速。管理员账号
+只决定应用中心登录名；部署所有权使用 Worker 配置中的固定 `OWNER_ID`，避免改名或
+历史数据造成应用所有权漂移。
 
-### 正式企业：连接现有 SSO
+## 忘记密码
 
-推荐连接 Google Workspace、Microsoft Entra ID、Okta 或其他 OIDC/SAML 身份提供商，
-然后让 Access 规则组引用企业目录中的员工组：
+当前版本不提供邮件找回，因为系统没有第二个身份源。管理员遗忘密码时，需要由
+Cloudflare 账号所有者直接在 D1 中删除 `personal_admin` 和 `personal_sessions` 记录，
+然后重新访问 `/setup`。执行前应先备份 D1；应用与部署记录不会随管理员记录删除。
 
-- `EZdeploy Users`：允许进入应用中心和发起部署；
-- `EZdeploy Admins`：平台配置、成员和审计管理；
-- 按部门建立的组：用于限制特定内部应用。
+## Cloudflare Access
 
-员工入职、离职和部门变更都在企业身份目录中处理。Access 会在登录时重新判断组
-成员关系；从企业组移除员工即可撤销入口权限。
-
-## 当前权限边界
-
-当前线上版本已经具备：
-
-- Access 负责登录和员工准入；
-- 员工邮箱是应用与部署的所有者；
-- 一次性连接码和短期 Agent 会话与员工邮箱绑定；
-- 普通员工不能管理其他员工的部署；
-- 控制面管理员使用独立管理凭证。
-
-当前尚未提供 EZdeploy 页面内的成员邀请、角色切换和部门管理。第一版中成员准入
-通过 Cloudflare Access 或企业 IdP 管理。
-
-## 推荐的下一阶段角色
-
-| 角色 | 建议权限 |
-|---|---|
-| Organization Admin | 成员、身份源、AI Provider、域名、配额和审计 |
-| Developer | 部署应用，管理自己或所在团队的应用 |
-| Viewer | 打开应用并查看目录，不能创建部署连接 |
-
-建议后续增加 `organizations`、`members`、`teams` 和 `application_members`，但身份验证
-仍交给 Access/SSO。EZdeploy 只管理授权关系，不保存密码。
-
-## 管理员操作示例
-
-应用中心的 Access Application 可以命名为 `ezdeploy-app-center`，并保护：
-
-- `apps.example.com/center`
-- `apps.example.com/deploy`
-- `apps.example.com/api/*`
-
-管理员在 Cloudflare Zero Trust 的 Access 规则组中增加员工邮箱或企业目录组后，
-员工即可直接登录使用。
+应用中心本身不再依赖 Cloudflare Access，也不会读取
+`cf-access-authenticated-user-email`。如果某个已部署应用需要额外保护，仍可选择性地
+为该应用配置 Cloudflare Access；这与 EZdeploy 管理员登录是两个独立的安全边界。

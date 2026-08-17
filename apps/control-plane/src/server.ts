@@ -176,7 +176,7 @@ function json(response: ServerResponse, statusCode: number, value: unknown): voi
 function main(): void {
   const tokenHashes = JSON.parse(process.env.ZAODEPLOY_MCP_TOKEN_HASHES ?? "{}") as Record<string, string>;
   if (Object.keys(tokenHashes).length === 0) {
-    throw new Error("ZAODEPLOY_MCP_TOKEN_HASHES must map SHA-256 token hashes to employee IDs");
+    throw new Error("ZAODEPLOY_MCP_TOKEN_HASHES must map SHA-256 token hashes to owner IDs");
   }
   const repository = new ControlPlaneRepository(
     path.resolve(process.env.ZAODEPLOY_DATABASE_PATH ?? ".zaodeploy/control-plane.db"),

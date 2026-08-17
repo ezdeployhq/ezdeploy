@@ -1,4 +1,12 @@
-import { applicationPage, landingPage } from "./ui.js";
+import {
+  adminConfigured,
+  authenticateAdmin,
+  loginAdmin,
+  logoutAdmin,
+  requestHasSameOrigin,
+  setupAdmin,
+} from "./auth.js";
+import { applicationPage, authPage, landingPage } from "./ui.js";
 
 interface Env {
   DB: D1Database;
@@ -6,11 +14,13 @@ interface Env {
   AGENT_GATEWAY_URL: string;
   AI_PROXY_URL: string;
   AI_ADMIN_TOKEN: string;
-  ADMIN_EMAILS: string;
+  OWNER_ID: string;
 }
 
 const responseHeaders = {
   "cache-control": "no-store",
+  "referrer-policy": "same-origin",
+  "x-frame-options": "DENY",
   "x-content-type-options": "nosniff",
 };
 
@@ -19,7 +29,7 @@ const legacyPage = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>EZdeploy 企业应用中心</title>
+  <title>EZdeploy 个人应用中心</title>
   <style>
     :root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172019;background:#f3f5f2;--ink:#172019;--muted:#667168;--line:#dce2dc;--surface:#fff;--accent:#17743d;--accent-soft:#e2f3e7}
     *{box-sizing:border-box}body{margin:0;min-height:100vh}button,input{font:inherit}button{cursor:pointer}
@@ -49,14 +59,14 @@ const legacyPage = `<!doctype html>
   <aside class="sidebar">
     <div class="brand"><span>EZ</span>deploy</div>
     <nav>
-      <button class="nav active" data-view="catalog" data-short="应用">企业应用</button>
+      <button class="nav active" data-view="catalog" data-short="应用">我的应用</button>
       <button class="nav" data-view="connect" data-short="部署">让 AI 帮你部署</button>
     </nav>
     <div class="identity" id="identity">正在读取登录身份…</div>
   </aside>
   <main>
     <section class="view active" id="catalog">
-      <header><div><h1>企业应用</h1><p>查找并打开已经发布的内部应用。</p></div></header>
+      <header><div><h1>我的应用</h1><p>查找并打开你已经发布的应用。</p></div></header>
       <div class="toolbar"><input class="search" id="search" placeholder="搜索应用、负责人或能力"></div>
       <div class="apps" id="apps"><div class="empty">正在读取应用目录…</div></div>
     </section>
@@ -67,10 +77,10 @@ const legacyPage = `<!doctype html>
       </header>
       <div class="connect-grid">
         <div class="steps">
-          <div class="step"><div><h2>生成一次性连接码</h2><p>连接码与你的企业邮箱绑定，2 小时内有效且只能兑换一次。</p></div></div>
+          <div class="step"><div><h2>生成一次性连接码</h2><p>连接码与你的管理员身份绑定，2 小时内有效且只能兑换一次。</p></div></div>
           <div class="step"><div><h2>复制整段提示词</h2><p>提示词包含公开部署说明 URL 和一次性连接码，直接发送给正在处理项目的 Agent。</p></div></div>
           <div class="step"><div><h2>确认部署计划</h2><p>Agent 会读取说明、分析项目并展示运行时、资源和访问范围；确认后完成部署。</p></div></div>
-          <div class="step"><div><h2>获得应用链接</h2><p>只有健康检查通过后，Agent 才会返回企业应用域名下的正式访问链接。</p></div></div>
+          <div class="step"><div><h2>获得应用链接</h2><p>只有健康检查通过后，Agent 才会返回你的应用域名下的正式访问链接。</p></div></div>
           <div class="notice">连接码不是长期密钥。Agent 兑换后得到的短期凭证不得写入项目文件、构建产物或聊天回复。</div>
         </div>
         <aside class="connections">
@@ -93,7 +103,7 @@ const state={apps:[],me:null};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 document.querySelectorAll('.nav').forEach(button=>button.onclick=()=>{document.querySelectorAll('.nav,.view').forEach(x=>x.classList.remove('active'));button.classList.add('active');document.querySelector('#'+button.dataset.view).classList.add('active');history.replaceState(null,'','#'+button.dataset.view)});
 if(location.hash==='#connect')document.querySelector('[data-view=connect]').click();
-async function loadMe(){const r=await fetch('/api/me');state.me=await r.json();document.querySelector('#identity').textContent=state.me.email;await loadConnections()}
+async function loadMe(){const r=await fetch('/api/me');state.me=await r.json();document.querySelector('#identity').textContent=state.me.username;await loadConnections()}
 async function loadApps(){state.apps=await fetch('/api/apps').then(r=>r.json());drawApps()}
 function drawApps(){const q=document.querySelector('#search').value.toLowerCase();const rows=state.apps.filter(x=>JSON.stringify(x).toLowerCase().includes(q));document.querySelector('#apps').innerHTML=rows.length?rows.map(x=>'<article class="app"><div><h2>'+esc(x.application.displayName)+'</h2><div class="meta">'+esc(x.application.description||x.application.slug)+'</div></div><div><div class="small">负责人</div>'+esc(x.application.ownerId)+'</div><div><div class="small">状态与能力</div><span class="ready">'+esc(x.deployment?.status||'未发布')+'</span><div class="caps">'+x.resources.map(r=>'<span class="cap">'+esc(r.kind)+'</span>').join('')+'</div></div>'+(x.deployment?.url?'<a class="open" href="'+encodeURI(x.deployment.url)+'" target="_blank">打开应用 →</a>':'<span></span>')+'</article>').join(''):'<div class="empty">暂无符合条件的应用</div>'}
 document.querySelector('#search').oninput=drawApps;
@@ -108,15 +118,6 @@ Promise.all([loadMe(),loadApps()]).catch(error=>{document.querySelector('#apps')
 
 function json(value: unknown, status = 200) {
   return Response.json(value, { status, headers: responseHeaders });
-}
-
-function authenticatedEmail(request: Request): string | null {
-  const value = request.headers.get("cf-access-authenticated-user-email")?.trim().toLowerCase();
-  return value?.includes("@") ? value : null;
-}
-
-function isAdministrator(email: string, env: Env): boolean {
-  return env.ADMIN_EMAILS.split(",").map((value) => value.trim().toLowerCase()).includes(email);
 }
 
 async function proxyAiAdmin(request: Request, env: Env, upstreamPath: string): Promise<Response> {
@@ -178,7 +179,7 @@ async function listApps(env: Env) {
 }
 
 export function buildAgentPrompt(code: string, env: Pick<Env, "AGENT_GATEWAY_URL">): string {
-  return `请把当前项目部署到我们公司的 EZdeploy 企业应用中心。
+  return `请把当前项目部署到我的 EZdeploy 个人应用中心。
 
 部署说明：
 ${env.AGENT_GATEWAY_URL}/agent.md
@@ -189,9 +190,9 @@ ${code}
 请先读取部署说明并分析当前项目，创建或更新 ezdeploy.yaml，然后向我展示简洁的部署计划，包括：
 - 应用名称与运行时
 - 需要的数据库、对象存储和 AI 能力
-- 公开访问或企业内部访问
+- 公开访问或受保护访问
 
-我确认后，请按照说明完成构建、部署、自定义域激活和健康检查，并返回企业应用域名下可访问的正式应用链接。
+我确认后，请按照说明完成构建、部署、自定义域激活和健康检查，并返回我的应用域名下可访问的正式应用链接。
 
 在我确认部署计划之前，不要兑换连接码或开始部署。确认后必须使用计划返回的 planDigest，确保部署内容与我看到的计划一致。
 
@@ -201,27 +202,75 @@ ${code}
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
-    if (url.pathname === "/health") return json({ status: "ok", service: "zaodeploy-app-center" });
+    if (url.pathname === "/health") return json({ status: "ok", service: "ezdeploy-app-center" });
     if (url.pathname === "/") return new Response(landingPage, { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
 
-    const email = authenticatedEmail(request);
-    if (!email) return json({ error: { code: "UNAUTHORIZED", message: "Cloudflare Access employee identity required" } }, 401);
+    if (url.pathname === "/api/auth/status" && request.method === "GET") {
+      const admin = await authenticateAdmin(request, env);
+      return json({ configured: await adminConfigured(env), authenticated: Boolean(admin), username: admin?.username });
+    }
+    if (url.pathname === "/setup" && request.method === "GET") {
+      if (await adminConfigured(env)) return Response.redirect(new URL("/login", url), 302);
+      return new Response(authPage("setup"), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+    }
+    if (url.pathname === "/login" && request.method === "GET") {
+      const admin = await authenticateAdmin(request, env);
+      if (admin) return Response.redirect(new URL("/center", url), 302);
+      if (!await adminConfigured(env)) return Response.redirect(new URL("/setup", url), 302);
+      return new Response(authPage("login"), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+    }
+    if (["/api/auth/setup", "/api/auth/login", "/api/auth/logout"].includes(url.pathname)) {
+      if (request.method !== "POST") return json({ error: { code: "METHOD_NOT_ALLOWED", message: "POST required" } }, 405);
+      if (!requestHasSameOrigin(request)) return json({ error: { code: "FORBIDDEN", message: "Same-origin request required" } }, 403);
+      if (url.pathname === "/api/auth/logout") {
+        return new Response(JSON.stringify({ loggedOut: true }), {
+          headers: { ...responseHeaders, "content-type": "application/json", "set-cookie": await logoutAdmin(request, env) },
+        });
+      }
+      const input = await request.json<{ username?: string; password?: string }>()
+        .catch((): { username?: string; password?: string } => ({}));
+      try {
+        if (url.pathname === "/api/auth/setup") {
+          const result = await setupAdmin(env, input.username?.trim() ?? "", input.password ?? "");
+          return new Response(JSON.stringify({ username: result.admin.username }), {
+            status: 201,
+            headers: { ...responseHeaders, "content-type": "application/json", "set-cookie": result.setCookie },
+          });
+        }
+        const result = await loginAdmin(request, env, input.username?.trim() ?? "", input.password ?? "");
+        if (!result) return json({ error: { code: "INVALID_CREDENTIALS", message: "账号或密码不正确" } }, 401);
+        return new Response(JSON.stringify({ username: result.admin.username }), {
+          headers: { ...responseHeaders, "content-type": "application/json", "set-cookie": result.setCookie },
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "认证失败";
+        return json({ error: { code: message.includes("尝试过多") ? "RATE_LIMITED" : "AUTH_FAILED", message } }, message.includes("尝试过多") ? 429 : 400);
+      }
+    }
+
+    const admin = await authenticateAdmin(request, env);
+    if (!admin) {
+      if (!url.pathname.startsWith("/api/")) {
+        return Response.redirect(new URL(await adminConfigured(env) ? "/login" : "/setup", url), 302);
+      }
+      return json({ error: { code: "UNAUTHORIZED", message: "Administrator login required" } }, 401);
+    }
+    if (!["GET", "HEAD"].includes(request.method) && !requestHasSameOrigin(request)) {
+      return json({ error: { code: "FORBIDDEN", message: "Same-origin request required" } }, 403);
+    }
     if (["/center", "/deploy", "/settings/ai"].includes(url.pathname)) {
       return new Response(applicationPage, { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
     }
     if (url.pathname === "/api/apps") return json(await listApps(env));
-    if (url.pathname === "/api/me") return json({ email, administrator: isAdministrator(email, env) });
+    if (url.pathname === "/api/me") return json({ username: admin.username, administrator: true });
     if (url.pathname.startsWith("/api/ai/providers")) {
-      if (!isAdministrator(email, env)) {
-        return json({ error: { code: "FORBIDDEN", message: "仅组织管理员可以管理 AI Provider" } }, 403);
-      }
       return proxyAiAdmin(request, env, url.pathname.replace("/api/ai", "/admin/v1"));
     }
 
     if (url.pathname === "/api/connections" && request.method === "GET") {
       const rows = await env.DB.prepare(`SELECT id,label,created_at,last_used_at,expires_at FROM cloud_agent_tokens
         WHERE owner_id=? AND active=1 AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at DESC`)
-        .bind(email, new Date().toISOString()).all<Record<string, unknown>>();
+        .bind(admin.ownerId, new Date().toISOString()).all<Record<string, unknown>>();
       return json(rows.results.map((row) => ({
         id: row.id, label: row.label, createdAt: row.created_at, lastUsedAt: row.last_used_at,
         expiresAt: row.expires_at,
@@ -237,7 +286,7 @@ export default {
         .bind(
           crypto.randomUUID(),
           await sha256(code),
-          email,
+          admin.ownerId,
           input.label?.slice(0, 80) || "Codex / WorkBuddy",
           expiresAt,
           createdAt,
@@ -251,7 +300,7 @@ export default {
     }
     if (url.pathname === "/api/connections" && request.method === "POST") {
       const count = await env.DB.prepare("SELECT count(*) AS value FROM cloud_agent_tokens WHERE owner_id=? AND active=1")
-        .bind(email).first<{ value: number }>();
+        .bind(admin.ownerId).first<{ value: number }>();
       if (Number(count?.value ?? 0) >= 5) return json({ error: { code: "LIMIT_REACHED", message: "最多保留 5 个有效连接，请先撤销旧连接" } }, 409);
       const input: { label?: string } = await request.json<{ label?: string }>().catch(() => ({}));
       const key = connectionKey();
@@ -259,7 +308,7 @@ export default {
       const createdAt = new Date().toISOString();
       await env.DB.prepare(`INSERT INTO cloud_agent_tokens
         (id,token_hash,owner_id,label,active,created_at) VALUES (?,?,?,?,1,?)`)
-        .bind(id, await sha256(key), email, input.label?.slice(0, 80) || "Codex / WorkBuddy", createdAt).run();
+        .bind(id, await sha256(key), admin.ownerId, input.label?.slice(0, 80) || "Codex / WorkBuddy", createdAt).run();
       return json({
         id,
         connectionKey: key,
@@ -270,7 +319,7 @@ export default {
     const match = /^\/api\/connections\/([0-9a-f-]{36})$/.exec(url.pathname);
     if (match && request.method === "DELETE") {
       await env.DB.prepare("UPDATE cloud_agent_tokens SET active=0 WHERE id=? AND owner_id=?")
-        .bind(match[1], email).run();
+        .bind(match[1], admin.ownerId).run();
       return json({ id: match[1], revoked: true });
     }
     return json({ error: { code: "NOT_FOUND", message: "Route not found" } }, 404);

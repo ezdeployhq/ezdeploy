@@ -31,7 +31,7 @@ export async function createDeployment(
 ) {
   const timestamp = now();
   let app = await env.DB.prepare("SELECT * FROM cloud_applications WHERE slug=?").bind(manifest.metadata.name).first<Record<string, unknown>>();
-  if (app && app.owner_id !== ownerId) throw new Error("Application slug belongs to another employee");
+  if (app && app.owner_id !== ownerId) throw new Error("Application slug belongs to another owner");
   if (!app) {
     app = { id: crypto.randomUUID(), slug: manifest.metadata.name, owner_id: ownerId };
     await env.DB.prepare(`INSERT INTO cloud_applications

@@ -13,7 +13,7 @@
     "CONTROL_PLANE_URL": "https://ezdeploy-control-plane.example.workers.dev",
     "AGENT_GATEWAY_URL": "https://deploy.apps.example.com",
     "AI_PROXY_URL": "https://ezdeploy-ai-proxy.example.workers.dev",
-    "ADMIN_EMAILS": "admin@example.com"
+    "OWNER_ID": "personal-owner"
   },
   "routes": [{ "pattern": "apps.example.com", "custom_domain": true }],
   "observability": { "enabled": true }

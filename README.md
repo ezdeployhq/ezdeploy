@@ -3,7 +3,7 @@
 [![CI](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml/badge.svg)](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 
-EZdeploy is an open-source, agent-native internal application delivery platform. An employee copies one deployment prompt from the application center into a coding agent. The agent reads EZdeploy's public capability document, previews a deployment plan without consuming the single-use code, waits for explicit confirmation, exchanges the code for a short-lived scoped session, deploys the exact confirmed plan, verifies application health, and returns a live enterprise URL.
+EZdeploy is an open-source, agent-native personal application deployment center. The owner copies one deployment prompt from the application center into a coding agent. The agent reads EZdeploy's public capability document, previews a deployment plan without consuming the single-use code, waits for explicit confirmation, exchanges the code for a short-lived scoped session, deploys the exact confirmed plan, verifies application health, and returns a live URL on the owner's domain.
 
 ## Product boundary
 
@@ -36,8 +36,8 @@ inspect project
   -> return URL
 ```
 
-Success requires a `ready` deployment and a verified `*.apps.example.com` URL when an
-enterprise domain suffix is configured. Provider deployment IDs and fallback hosting URLs
+Success requires a `ready` deployment and a verified `*.apps.example.com` URL when a
+personal application domain suffix is configured. Provider deployment IDs and fallback hosting URLs
 alone are not success.
 
 ## Repository layout
@@ -48,8 +48,8 @@ apps/control-plane    Authenticated source-upload and deployment API
 apps/cloud-control-plane  Online Worker + D1/R2/Workflow control plane
 apps/agent-ingress       Public token-authenticated Agent API ingress
 apps/ai-proxy         OpenAI-compatible scoped AI gateway
-apps/app-center       Authenticated internal application catalog
-apps/cloud-app-center Online Cloudflare Access protected application center
+apps/app-center       Authenticated local application catalog
+apps/cloud-app-center Online single-administrator application center
 packages/contracts    Versioned manifest and domain schemas
 packages/core         State machine, SQLite repository, orchestration, providers
 skills/ezdeploy      Codex deployment workflow
@@ -72,11 +72,11 @@ The repository includes a deterministic mock for tests and a real Cloudflare ada
 - explicit deletion with resource retention or removal;
 - Pages and Workers deployment with D1/R2 runtime bindings;
 - scoped AI virtual keys issued by an OpenAI-compatible proxy and injected as secrets;
-- Cloudflare Access organization policies;
+- optional Cloudflare Access policies for protected applications;
 - immutable Pages artifacts, Worker version capture, and restoration;
-- an authenticated application center plus MCP list, logs, rollback, and delete tools.
+- a single-administrator application center plus MCP list, logs, rollback, and delete tools.
 
-The mock provider must not be presented as production. A production installation requires a Cloudflare account, an existing Zero Trust identity provider, and deployment of the AI Proxy when AI bindings are used.
+The mock provider must not be presented as production. A production installation requires a Cloudflare account and deployment of the AI Proxy when AI bindings are used. Cloudflare Zero Trust is optional and only needed for protected application access.
 
 ## Develop
 
@@ -98,20 +98,20 @@ npm --workspace @ezdeploy/agent run dev
 ```
 
 The mock provider returns `.example.test` URLs and must be selected explicitly. Production
-uses the online `@ezdeploy/cloud-control-plane`. The default employee flow requires no prior
+uses the online `@ezdeploy/cloud-control-plane`. The default owner flow requires no prior
 installation or MCP configuration: the application center generates a prompt containing a
 public `agent.md` URL and a two-hour, single-use connection code. Terminal-capable Agents
 download a versioned standalone client into an operating-system temporary directory;
 Remote MCP and an operator-published `@ezdeploy/agent` package remain optional enhanced
 distribution paths. No local
-control-plane daemon or employee-visible Cloudflare Access service credential is required.
+control-plane daemon or owner-visible Cloudflare Access service credential is required.
 The same canonical workflow is discoverable through `agent.md`, `skill.md`, `agents.md`,
 `llms.txt`, `/.well-known/ezdeploy.json`, and `openapi.json`. The old well-known path and
 `ZAODEPLOY_*` environment variables are retained as stable legacy protocol identifiers.
 
 AI and organization access are opt-in control-plane capabilities; see [`.env.example`](./.env.example). The AI Proxy keeps the real model-provider key server-side and issues revocable per-application keys. Vite/static applications must call D1, R2, and AI through Pages Functions—never expose `ZAO_AI_API_KEY` to browser code.
 
-Organization administrators can configure DeepSeek, OpenAI, Anthropic, Gemini, OpenRouter,
+The personal administrator can configure DeepSeek, OpenAI, Anthropic, Gemini, OpenRouter,
 Cloudflare Workers AI, or a custom OpenAI-compatible endpoint from the application center.
 See [`docs/ai-provider-management.md`](./docs/ai-provider-management.md).
 
@@ -120,15 +120,15 @@ Gateway builds locally with a minimal environment and uploads a digest-verified 
 containing only the manifest, built assets, compiled Pages Functions, routes, and migrations.
 Project build scripts never execute in the credential-bearing control plane.
 
-Employee passwords are not stored by EZdeploy. Cloudflare Access or the organization's
-OIDC/SAML identity provider authenticates employees, while EZdeploy owns application-level
-authorization and ownership. See [`docs/account-management.md`](./docs/account-management.md).
+On first visit, the owner creates the installation's only administrator account. EZdeploy stores
+only a salted PBKDF2 password derivative and hashed, expiring sessions in D1; it never stores the
+plaintext password or session token. See [`docs/account-management.md`](./docs/account-management.md).
 
 Run the application center against the same database:
 
 ```bash
 ZAODEPLOY_DATABASE_PATH=.zaodeploy/control-plane.db \
-ZAODEPLOY_APP_CENTER_TOKEN='<employee token>' \
+ZAODEPLOY_APP_CENTER_TOKEN='<personal owner token>' \
 npm --workspace @ezdeploy/app-center run dev
 ```
 

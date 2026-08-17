@@ -1,6 +1,6 @@
 # AI Provider 管理
 
-组织管理员通过 `https://apps.example.com/settings/ai` 管理模型供应商。应用不会直接
+个人管理员通过 `https://apps.example.com/settings/ai` 管理模型供应商。应用不会直接
 获得 DeepSeek、OpenAI 或其他供应商的主密钥；EZdeploy AI Proxy 为每个应用签发
 可撤销的 `zai_` 虚拟密钥。
 
@@ -36,8 +36,8 @@ Provider API Key 通过 TLS 发送到 AI Proxy，并使用独立的
 返回“已配置”和末四位，完整密钥不会回显、写入应用环境或进入 Agent 上下文。
 
 用于代理管理请求的 `AI_ADMIN_TOKEN` 仅保存在应用中心 Worker Secret 中，并与 AI
-Proxy 的 `CONTROL_PLANE_TOKEN` 对应。只有 `ADMIN_EMAILS` 中且已经通过 Cloudflare
-Access 验证的员工可以调用管理接口。
+Proxy 的 `CONTROL_PLANE_TOKEN` 对应。只有通过 EZdeploy 单管理员账号登录、持有有效
+安全会话的请求可以调用管理接口。
 
 ## 添加自定义 Provider
 

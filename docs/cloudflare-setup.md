@@ -6,10 +6,10 @@ EZdeploy production consists of four online Workers:
 
 - `cloud-control-plane`: authenticated API, D1 state, R2 bundles, and Workflow orchestration;
 - `agent-ingress`: token-authenticated Agent API that reaches the control plane through a Worker service binding;
-- `cloud-app-center`: employee-facing catalog backed by the same D1;
+- `cloud-app-center`: owner-facing catalog and single-administrator login backed by the same D1;
 - `ai-proxy`: OpenAI-compatible gateway issuing revocable per-application `zai_` keys.
 
-The employee does not need to preinstall a Gateway. The public Agent endpoint serves
+The owner does not need to preinstall a Gateway. The public Agent endpoint serves
 `/agent.md`, `/skill.md`, `/agents.md`, `/llms.txt`, `/openapi.json`, and
 `/.well-known/zaodeploy.json`; the application center issues a two-hour
 single-use connection code. A terminal-capable Agent downloads the standalone client and its
@@ -38,14 +38,14 @@ applications are then assigned exact Pages custom domains such as
 domains, so EZdeploy registers each exact hostname through the Pages API after deployment.
 The control-plane API token must include `DNS Write` for the target zone so Cloudflare can
 create the corresponding proxied CNAME records. Domain and certificate activation is a
-durable Workflow stage. When an enterprise suffix is configured, EZdeploy does not mark a
-deployment ready or fall back to `pages.dev` until the exact enterprise hostname is active.
+durable Workflow stage. When a custom application suffix is configured, EZdeploy does not mark a
+deployment ready or fall back to `pages.dev` until the exact custom hostname is active.
 
 ## Cloudflare resources
 
 Use one Cloudflare account. For the runtime API token, grant the account-scoped permissions
 `D1 Write`, `Pages Write`, `Workers R2 Storage Write`, and `Workers AI Read`. Add `DNS Write`
-for the application zone when exact enterprise domains are enabled. Add `Access: Apps and
+for the application zone when exact custom domains are enabled. Add `Access: Apps and
 Policies Write` only when `ACCESS_ENABLED=true`; Wrangler's interactive login deploys the
 EZdeploy Workers and Workflow separately.
 
@@ -54,9 +54,10 @@ activation (and may request a payment method) before the first bucket can be cre
 R2 does not itself create usage charges; usage above Cloudflare's current free allowance is billed.
 Complete this one-time activation before running `wrangler r2 bucket create`.
 
-For organization-only applications, also configure a Zero Trust identity provider, an employee
-Access group, and one service token used by deployment automation and health checks. A first
-installation can start in public-only mode and add Access later.
+For protected applications, also configure a Zero Trust identity provider, an allowed-user
+Access group, and one service token used by deployment automation and health checks. The
+personal application center itself uses its own single-administrator login and does not require
+Cloudflare Access. A first installation can start in public-only mode and add Access later.
 
 Create shared storage and deploy:
 
@@ -81,11 +82,14 @@ Inject `CLOUDFLARE_API_TOKEN`, `AI_CONTROL_TOKEN`, `CONTROL_PLANE_TOKEN`,
 receives `AI_GATEWAY_TOKEN` and the matching `CONTROL_PLANE_TOKEN`. Never place these values in
 `vars`, an application repository, a browser bundle, or an MCP argument.
 
-Protect these hostnames with Cloudflare Access:
+When protected application deployment is enabled, protect these hostnames with Cloudflare Access:
 
-- the control-plane Worker: employee group plus service-token automation policy;
-- the application-center Worker: employee group, optionally service-token smoke policy;
-- each organization application: employee group plus service-token health policy.
+- the control-plane Worker: administrator group plus service-token automation policy;
+- each protected application: allowed-user group plus service-token health policy.
+
+Do not put the application-center Worker behind Access unless you intentionally want a second
+login layer. On first visit to `/center`, create the installation's only administrator account.
+The password derivative and expiring session hashes are stored in D1.
 
 Set `ACCESS_ENABLED` to `"true"` only after the Access group and service token are configured.
 Leave it as `"false"` for an initial public-only installation. Public deployments then require no
@@ -96,7 +100,7 @@ configuration error instead of being published without protection.
 
 Open the Access-protected application center and choose **让 AI 帮你部署**. Paste the generated
 prompt into the Agent working on the project. No repository clone, local path, or manual MCP
-registration is part of the employee flow.
+registration is part of the owner flow.
 
 The prompt points to the public deployment guide, for example:
 
@@ -130,18 +134,18 @@ rm -rf "$ZAO_TMP"
 This is a temporary execution, not an installation. Planning does not redeem the code.
 Deployment exchanges it once; the plaintext session credential remains in the client process
 and expires after twelve hours. If `ezdeploy.yaml` changes after confirmation, deployment stops
-before upload. The same client may also be distributed through an enterprise npm Registry as
+before upload. The same client may also be distributed through a private npm registry as
 `@ezdeploy/agent`.
 
-The employee can then say “部署这个应用”. The Agent validates or creates `ezdeploy.yaml`,
+The owner can then say “部署这个应用”. The Agent validates or creates `ezdeploy.yaml`,
 shows the plan, builds locally, compiles Pages Functions, uploads a deterministic deployment
 bundle, waits for the online Workflow, and returns only after the application is healthy and
 registered in the application center.
 
 The MCP server and tools explicitly identify EZdeploy. The legacy tool identifiers
 (`deploy_to_zaodeploy`, `list_zaodeploy_apps`, and related names) remain available during the
-brand migration. Unless the employee names another platform,
-“部署这个应用” means deployment to the EZdeploy enterprise application center.
+brand migration. Unless the owner names another platform,
+“部署这个应用” means deployment to the owner's EZdeploy personal application center.
 
 The Gateway never receives the Cloudflare account token or model-provider token. The online
 control plane never executes arbitrary project build commands.
@@ -163,7 +167,7 @@ Run the real destructive smoke test with a unique temporary application:
 
 ```bash
 ZAODEPLOY_CONTROL_PLANE_URL=https://zaodeploy-control-plane.example.workers.dev \
-ZAODEPLOY_CONTROL_PLANE_TOKEN='<employee token>' \
+ZAODEPLOY_CONTROL_PLANE_TOKEN='<personal owner token>' \
 CF_ACCESS_CLIENT_ID='<service client id>' \
 CF_ACCESS_CLIENT_SECRET='<service client secret>' \
 CLOUDFLARE_ACCESS_GROUP_ID='<employee Access group id>' \

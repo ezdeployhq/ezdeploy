@@ -95,8 +95,8 @@ async function deploymentPlan(manifest: Manifest) {
     execution: "cloudflare-workflow",
     risks: [
       manifest.spec.access.mode === "public"
-        ? "Application will be reachable without enterprise sign-in"
-        : "Application will require enterprise sign-in",
+        ? "Application will be reachable without sign-in"
+        : "Application will require protected access",
       ...(resourceKinds.length > 0
         ? [`The deployment will provision or bind: ${resourceKinds.join(", ")}`]
         : []),
@@ -104,7 +104,7 @@ async function deploymentPlan(manifest: Manifest) {
   };
 }
 
-const landing = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EZdeploy 控制面</title><style>:root{font-family:Inter,system-ui;color:#effbf2;background:#07120b}body{margin:0;min-height:100vh;display:grid;place-items:center}.box{width:min(760px,calc(100% - 48px));padding:48px;border:1px solid #23452d;border-radius:24px;background:#0c1e12}h1{font-size:48px;margin:0 0 12px}.ok{color:#6ceb91}.links{display:flex;gap:12px;margin-top:28px}a{color:#07120b;background:#78ed9b;padding:11px 16px;border-radius:10px;text-decoration:none;font-weight:700}code{color:#9ff4b7}</style></head><body><main class="box"><div class="ok">● ONLINE</div><h1>EZdeploy 控制面</h1><p>企业内部应用的在线发布 API。构建在员工侧完成，部署包进入 R2，状态写入 D1，并由 Cloudflare Workflow 完成发布、鉴权与健康检查。</p><p><code>POST /v1/deployments</code> · <code>GET /v1/apps</code> · <code>GET /v1/deployments/:id</code></p><div class="links"><a href="/health">运行状态</a><a href="${"APP_CENTER"}">应用中心</a></div></main></body></html>`;
+const landing = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EZdeploy 控制面</title><style>:root{font-family:Inter,system-ui;color:#effbf2;background:#07120b}body{margin:0;min-height:100vh;display:grid;place-items:center}.box{width:min(760px,calc(100% - 48px));padding:48px;border:1px solid #23452d;border-radius:24px;background:#0c1e12}h1{font-size:48px;margin:0 0 12px}.ok{color:#6ceb91}.links{display:flex;gap:12px;margin-top:28px}a{color:#07120b;background:#78ed9b;padding:11px 16px;border-radius:10px;text-decoration:none;font-weight:700}code{color:#9ff4b7}</style></head><body><main class="box"><div class="ok">● ONLINE</div><h1>EZdeploy 控制面</h1><p>个人应用中心的在线发布 API。构建由编码 Agent 完成，部署包进入 R2，状态写入 D1，并由 Cloudflare Workflow 完成发布、访问控制与健康检查。</p><p><code>POST /v1/deployments</code> · <code>GET /v1/apps</code> · <code>GET /v1/deployments/:id</code></p><div class="links"><a href="/health">运行状态</a><a href="${"APP_CENTER"}">应用中心</a></div></main></body></html>`;
 
 export default {
   async fetch(request: Request, env: Environment): Promise<Response> {

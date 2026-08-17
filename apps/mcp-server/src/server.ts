@@ -46,10 +46,10 @@ export function createServer(
   options: { ownerIdRequired?: boolean } = {},
 ): McpServer {
   const server = new McpServer(
-    { name: "zaodeploy-enterprise-app-center", version: "0.2.0" },
+    { name: "ezdeploy-personal-app-center", version: "0.2.0" },
     {
       instructions: [
-        "This MCP is the deployment interface for the EZdeploy enterprise application center.",
+        "This MCP is the deployment interface for the EZdeploy personal application center.",
         "When the user says '部署这个应用', '发布这个项目', or an equivalent phrase without naming another platform, interpret the deployment target as EZdeploy and use this MCP.",
         "Do not substitute Vercel, a direct Cloudflare CLI deployment, or a local preview unless the user explicitly names that target.",
         "When the user asks to deploy or publish the current application, inspect its files and ensure ezdeploy.yaml exists.",
@@ -101,9 +101,9 @@ export function createServer(
   server.registerTool(
     "deploy_to_zaodeploy",
     {
-      title: "Deploy to EZdeploy enterprise app center",
+      title: "Deploy to EZdeploy personal app center",
       description:
-        "Deploy specifically to the EZdeploy enterprise app center, provision declared resources, verify health, register the application in the catalog, and return the live URL.",
+        "Deploy specifically to the EZdeploy personal app center, provision declared resources, verify health, register the application in the catalog, and return the live URL.",
       inputSchema: {
         projectDirectory: z.string().min(1),
         ownerId: options.ownerIdRequired === false

@@ -84,7 +84,7 @@ function openApiDocument(origin: string) {
     info: {
       title: "EZdeploy Agent API",
       version: "1.1.0",
-      description: "Two-phase, zero-install enterprise application deployment protocol",
+      description: "Two-phase, zero-install personal application deployment protocol",
     },
     servers: [{ url: origin }],
     paths: {
@@ -114,7 +114,7 @@ function openApiDocument(origin: string) {
       },
       "/v1/deployments/{id}": { get: { summary: "Read structured deployment state" } },
       "/v1/deployments/{id}/logs": { get: { summary: "Read build and runtime events" } },
-      "/v1/apps": { get: { summary: "List applications visible to the employee" } },
+      "/v1/apps": { get: { summary: "List applications owned by the administrator" } },
     },
     components: {
       securitySchemes: {
@@ -165,7 +165,7 @@ export default {
       return Response.json({
         schemaVersion: "1.1",
         name: "EZdeploy",
-        description: "Zero-install enterprise application deployment center",
+        description: "Zero-install personal application deployment center",
         documentation: `${origin}/agent.md`,
         connect: {
           planEndpoint: `${origin}/v1/connect/plan`,
