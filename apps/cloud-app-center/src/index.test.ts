@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAgentPrompt, buildPersistentAgentPrompt, createConnectCode } from "./index.js";
+import { applicationPage, authPage } from "./ui.js";
 
 describe("zero-install application center onboarding", () => {
   it("creates human-readable single-use code shapes", () => {
@@ -28,5 +29,14 @@ describe("zero-install application center onboarding", () => {
     expect(prompt).toContain("部署到应用中心");
     expect(prompt).toContain("用户级凭证目录");
     expect(prompt).not.toContain("一次性");
+  });
+
+  it("uses the same orange workspace system across admin surfaces", () => {
+    expect(applicationPage).toContain("EZdeploy unified workspace");
+    expect(applicationPage).toContain("--orange:#f6821f");
+    expect(applicationPage).toContain("DEPLOYMENT ACCESS");
+    expect(applicationPage).toContain("MODEL ROUTING");
+    expect(authPage("login")).toContain("EZdeploy product system");
+    expect(authPage("setup")).toContain("PERSONAL CONTROL PLANE");
   });
 });
