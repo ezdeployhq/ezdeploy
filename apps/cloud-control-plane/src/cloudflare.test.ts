@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { applyAccess, pagesCustomDomainStatus, pagesDeploymentForm, preparePagesCustomDomain } from "./cloudflare.js";
+import { applyAccess, pagesCustomDomainStatus, pagesDeploymentForm, pagesProjectHostname, preparePagesCustomDomain } from "./cloudflare.js";
 import type { DeploymentBundle } from "./types.js";
 
 const envelope = (result: unknown) => Response.json({ success: true, result });
@@ -9,7 +9,7 @@ describe("Cloudflare custom domains", () => {
     vi.unstubAllGlobals();
   });
 
-  it("creates the exact proxied CNAME before activating the Pages domain", async () => {
+  it("associates the Pages domain before creating an exact DNS-only CNAME", async () => {
     const calls: Array<{ url: string; method: string; body?: string }> = [];
     vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input);
@@ -19,6 +19,7 @@ describe("Cloudflare custom domains", () => {
       if (url.endsWith("/dns_records") && method === "POST") return envelope({ id: "dns-id" });
       if (url.endsWith("/domains") && method === "GET") return envelope([]);
       if (url.endsWith("/domains") && method === "POST") return envelope({ id: "domain-id" });
+      if (url.endsWith("/domains/example.apps.example.com") && method === "PATCH") return envelope({ id: "domain-id" });
       throw new Error(`Unexpected request ${method} ${url}`);
     }));
 
@@ -26,25 +27,59 @@ describe("Cloudflare custom domains", () => {
       CLOUDFLARE_API_TOKEN: "secret",
       CLOUDFLARE_ZONE_ID: "zone-id",
     } as never, "/accounts/account/pages/projects/zao-example-production",
-    "example.apps.example.com", "zao-example-production");
+    "example.apps.example.com", "zao-example-production-bps.pages.dev");
 
     expect(url).toBe("https://example.apps.example.com");
     const dnsCreate = calls.find((call) => call.url.endsWith("/dns_records") && call.method === "POST");
     expect(JSON.parse(dnsCreate?.body ?? "{}")).toMatchObject({
       type: "CNAME",
       name: "example.apps.example.com",
-      content: "zao-example-production.pages.dev",
-      proxied: true,
+      content: "zao-example-production-bps.pages.dev",
+      proxied: false,
     });
+    expect(calls.findIndex((call) => call.url.endsWith("/domains") && call.method === "POST"))
+      .toBeLessThan(calls.findIndex((call) => call.url.endsWith("/dns_records") && call.method === "POST"));
     expect(calls.findIndex((call) => call.url.endsWith("/dns_records") && call.method === "POST"))
-      .toBeLessThan(calls.findIndex((call) => call.url.endsWith("/domains") && call.method === "POST"));
+      .toBeLessThan(calls.findIndex((call) => call.url.endsWith("/domains/example.apps.example.com") && call.method === "PATCH"));
   });
 
   it("refuses to silently fall back when the zone is not configured", async () => {
     await expect(preparePagesCustomDomain({
       CLOUDFLARE_API_TOKEN: "secret",
-    } as never, "/project", "example.apps.example.com", "zao-example-production"))
+    } as never, "/project", "example.apps.example.com", "zao-example-production.pages.dev"))
       .rejects.toThrow(/CLOUDFLARE_ZONE_ID/);
+  });
+
+  it("re-registers a domain left pending by an earlier failed activation", async () => {
+    const calls: Array<{ url: string; method: string; body?: string }> = [];
+    vi.stubGlobal("fetch", vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method ?? "GET";
+      calls.push({ url, method, body: typeof init?.body === "string" ? init.body : undefined });
+      if (url.endsWith("/domains") && method === "GET") {
+        return envelope([{ name: "example.apps.example.com", status: "pending" }]);
+      }
+      if (url.includes("/domains/example.apps.example.com") && method === "DELETE") return envelope(null);
+      if (url.endsWith("/domains") && method === "POST") return envelope({ id: "domain-id" });
+      if (url.endsWith("/domains/example.apps.example.com") && method === "PATCH") return envelope({ id: "domain-id" });
+      if (url.includes("/dns_records?name=")) {
+        return envelope([{ id: "dns-id", type: "CNAME", name: "example.apps.example.com", content: "zao-example-production.pages.dev", proxied: true }]);
+      }
+      if (url.endsWith("/dns_records/dns-id") && method === "PUT") return envelope({ id: "dns-id" });
+      throw new Error(`Unexpected request ${method} ${url}`);
+    }));
+
+    await preparePagesCustomDomain({
+      CLOUDFLARE_API_TOKEN: "secret",
+      CLOUDFLARE_ZONE_ID: "zone-id",
+    } as never, "/accounts/account/pages/projects/zao-example-production",
+    "example.apps.example.com", "zao-example-production.pages.dev");
+
+    expect(calls.some((call) => call.url.endsWith("/domains/example.apps.example.com") && call.method === "DELETE")).toBe(true);
+    expect(calls.findIndex((call) => call.url.endsWith("/domains/example.apps.example.com") && call.method === "DELETE"))
+      .toBeLessThan(calls.findIndex((call) => call.url.endsWith("/domains") && call.method === "POST"));
+    const dnsUpdate = calls.find((call) => call.url.endsWith("/dns_records/dns-id") && call.method === "PUT");
+    expect(JSON.parse(dnsUpdate?.body ?? "{}")).toMatchObject({ proxied: false });
   });
 
   it("reports pending activation for a durable workflow wait", async () => {
@@ -55,6 +90,13 @@ describe("Cloudflare custom domains", () => {
     await expect(pagesCustomDomainStatus({
       CLOUDFLARE_API_TOKEN: "secret",
     } as never, "/project", "example.apps.example.com")).resolves.toBe("pending");
+  });
+
+  it("uses the Pages API canonical subdomain when Cloudflare adds a uniqueness suffix", () => {
+    expect(pagesProjectHostname({ subdomain: "https://zao-example-production-bps.pages.dev/" }, "zao-example-production"))
+      .toBe("zao-example-production-bps.pages.dev");
+    expect(pagesProjectHostname({}, "zao-example-production"))
+      .toBe("zao-example-production.pages.dev");
   });
 });
 

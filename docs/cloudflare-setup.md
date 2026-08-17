@@ -37,7 +37,12 @@ applications are then assigned exact Pages custom domains such as
 `expenses-staging.apps.example.com`. Cloudflare Pages does not support wildcard custom
 domains, so EZdeploy registers each exact hostname through the Pages API after deployment.
 The control-plane API token must include `DNS Write` for the target zone so Cloudflare can
-create the corresponding proxied CNAME records. Domain and certificate activation is a
+associate the hostname with Pages first and then create the corresponding DNS-only CNAME.
+DNS-only avoids Cloudflare error 1014 when the DNS zone and Pages project are owned by
+different accounts. The CNAME target comes from the Pages API `subdomain` field rather than
+being inferred from the project name, because Cloudflare can add a global-uniqueness suffix.
+After writing DNS, EZdeploy calls the Pages domain validation-retry endpoint automatically.
+Domain and certificate activation is a
 durable Workflow stage. When a custom application suffix is configured, EZdeploy does not mark a
 deployment ready or fall back to `pages.dev` until the exact custom hostname is active.
 

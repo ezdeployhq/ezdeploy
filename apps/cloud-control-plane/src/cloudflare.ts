@@ -204,10 +204,11 @@ export async function deployPages(
   const deployment = await api<{ id: string; url: string }>(env, `${projectPath}/deployments`, { method: "POST", body: form });
   if (!deployment) throw new Error("Pages deployment returned no result");
   await waitForPagesDeployment(env, projectPath, deployment.id);
-  const pagesUrl = `https://${projectName}.pages.dev`;
+  const pagesHostname = pagesProjectHostname(project, projectName);
+  const pagesUrl = `https://${pagesHostname}`;
   const customHostname = applicationHostname(env, bundle.manifest.metadata.name, branch);
   const customUrl = customHostname
-    ? await preparePagesCustomDomain(env, projectPath, customHostname, projectName)
+    ? await preparePagesCustomDomain(env, projectPath, customHostname, pagesHostname)
     : null;
   const stableUrl = customUrl ?? pagesUrl;
   return {
@@ -261,12 +262,32 @@ export async function preparePagesCustomDomain(
   env: Environment,
   projectPath: string,
   hostname: string,
-  projectName: string,
+  pagesHostname: string,
 ): Promise<string> {
   if (!env.CLOUDFLARE_ZONE_ID) {
     throw new Error("CLOUDFLARE_ZONE_ID is required when APPLICATION_DOMAIN_SUFFIX is configured");
   }
-  const target = `${projectName}.pages.dev`;
+  const target = pagesHostname;
+  // Pages must know about the hostname before DNS points at pages.dev. Creating a
+  // proxied CNAME first can be interpreted as a cross-account CNAME and return 1014.
+  const domains = await api<Array<{ name: string; status: string }>>(
+    env,
+    `${projectPath}/domains`,
+  ) ?? [];
+  const existingDomain = domains.find((domain) => domain.name === hostname);
+  if (existingDomain && existingDomain.status !== "active") {
+    // A failed deployment can leave a pending association that never re-runs
+    // validation after DNS is corrected. Reset it before retrying registration.
+    await api(env, `${projectPath}/domains/${encodeURIComponent(hostname)}`, {
+      method: "DELETE",
+    });
+  }
+  if (!existingDomain || existingDomain.status !== "active") {
+    await api(env, `${projectPath}/domains`, {
+      method: "POST",
+      body: JSON.stringify({ name: hostname }),
+    });
+  }
   const records = await api<Array<{
     id: string;
     type: string;
@@ -282,8 +303,10 @@ export async function preparePagesCustomDomain(
     type: "CNAME",
     name: hostname,
     content: target,
-    proxied: true,
-    ttl: 1,
+    // DNS-only works for Pages-managed TLS and also supports zones that are not
+    // owned by the Pages account. It avoids Cloudflare's cross-user proxy guard.
+    proxied: false,
+    ttl: 300,
   });
   if (!exact) {
     await api(env, `/zones/${env.CLOUDFLARE_ZONE_ID}/dns_records`, {
@@ -293,24 +316,36 @@ export async function preparePagesCustomDomain(
   } else if (
     exact.type !== "CNAME" ||
     exact.content !== target ||
-    exact.proxied !== true
+    exact.proxied !== false
   ) {
     await api(env, `/zones/${env.CLOUDFLARE_ZONE_ID}/dns_records/${exact.id}`, {
       method: "PUT",
       body: dnsBody,
     });
   }
-  const domains = await api<Array<{ name: string; status: string }>>(
-    env,
-    `${projectPath}/domains`,
-  ) ?? [];
-  if (!domains.some((domain) => domain.name === hostname)) {
-    await api(env, `${projectPath}/domains`, {
-      method: "POST",
-      body: JSON.stringify({ name: hostname }),
+  if (!existingDomain || existingDomain.status !== "active") {
+    // Adding a Pages domain before its external/DNS-only CNAME exists leaves
+    // verification pending. PATCH is Cloudflare's documented validation retry
+    // and is the API equivalent of "Check DNS records" in the dashboard.
+    await api(env, `${projectPath}/domains/${encodeURIComponent(hostname)}`, {
+      method: "PATCH",
+      body: JSON.stringify({}),
     });
   }
   return `https://${hostname}`;
+}
+
+export function pagesProjectHostname(
+  project: Record<string, unknown>,
+  projectName: string,
+): string {
+  const raw = typeof project.subdomain === "string" ? project.subdomain.trim() : "";
+  const hostname = raw
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.$/, "")
+    .toLowerCase();
+  return hostname.endsWith(".pages.dev") ? hostname : `${projectName}.pages.dev`;
 }
 
 export async function pagesCustomDomainStatus(
