@@ -9,7 +9,8 @@ export interface PersonalAdmin {
 }
 
 const sessionCookie = "ezdeploy_session";
-const passwordIterations = 120_000;
+// Cloudflare Workers Web Crypto currently rejects PBKDF2 iteration counts above 100,000.
+export const passwordIterations = 100_000;
 const sessionLifetimeSeconds = 30 * 24 * 60 * 60;
 
 function bytesToBase64Url(bytes: Uint8Array): string {

@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { derivePasswordHash, requestHasSameOrigin, validateCredentials } from "./auth.js";
+import {
+  derivePasswordHash,
+  passwordIterations,
+  requestHasSameOrigin,
+  validateCredentials,
+} from "./auth.js";
 
 describe("personal administrator authentication", () => {
+  it("stays within the Cloudflare Workers PBKDF2 limit", () => {
+    expect(passwordIterations).toBe(100_000);
+  });
+
   it("derives stable, salted password hashes", async () => {
     const salt = "MDEyMzQ1Njc4OWFiY2RlZg";
     const first = await derivePasswordHash("a-long-private-password", salt, 1_000);
