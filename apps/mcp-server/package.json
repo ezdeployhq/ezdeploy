@@ -19,7 +19,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@ezdeploy/contracts": "0.1.0",
     "@ezdeploy/core": "0.1.0",
     "blake3-wasm": "^2.1.5",
