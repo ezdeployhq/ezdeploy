@@ -15,6 +15,15 @@
 - Limit release and environment permissions to maintainers.
 - Add the repository description, topics, license, social preview, and project website.
 
+Current private-repository state:
+
+- repository description, topics, Issues, Discussions, vulnerability alerts, automated security
+  fixes, CODEOWNERS, and successful CI are configured;
+- GitHub Free does not provide Secret Scanning or branch protection for this private repository;
+  enable both immediately after making it public, or upgrade the repository plan first;
+- enable private vulnerability reporting when the repository becomes public;
+- Dependabot major-version upgrades require deliberate review and are not created automatically.
+
 ## First release
 
 1. Publish the repository without production credentials or tenant data.
