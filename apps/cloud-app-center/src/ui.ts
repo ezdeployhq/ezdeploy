@@ -1,4 +1,4 @@
-export { landingPage } from "./landing.js";
+export { landingPage, landingPageFor } from "./landing.js";
 
 const legacyLandingPage = `<!doctype html>
 <html lang="zh-CN">
@@ -89,9 +89,9 @@ const legacyLandingPage = `<!doctype html>
 
 void legacyLandingPage;
 
-export function authPage(mode: "setup" | "login"): string {
+export function authPage(mode: "setup" | "login", locale: "zh" | "en" = "zh"): string {
   const setup = mode === "setup";
-  return `<!doctype html>
+  const page = `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -118,7 +118,7 @@ export function authPage(mode: "setup" | "login"): string {
   </style>
 </head>
 <body>
-  <header class="topbar"><div class="topbar-inner"><a class="brand" href="/"><i>EZ</i>deploy</a><a class="back" href="/">返回首页</a></div></header>
+  <header class="topbar"><div class="topbar-inner"><a class="brand" href="/"><i>EZ</i>deploy</a><div style="display:flex;align-items:center;gap:14px"><a class="back" href="/en/${mode}" lang="en">EN</a><a class="back" href="/">返回首页</a></div></div></header>
   <main><aside class="auth-context"><div class="auth-label">PERSONAL CONTROL PLANE</div><h2>你的应用，<br><span>你的云边界。</span></h2><p>在一个简洁的控制台里管理应用、部署凭证和 AI Provider。基础设施由 EZdeploy 统一处理。</p><div class="auth-flow"><div><b>01</b> 一句话触发部署</div><div><b>02</b> 确认资源与访问计划</div><div><b>03</b> 获得健康应用链接</div></div></aside><section class="card" aria-labelledby="auth-title">
     <div class="mark" aria-hidden="true">EZ</div>
     <p class="eyebrow">${setup ? "FIRST-TIME SETUP" : "PERSONAL ADMIN"}</p>
@@ -134,14 +134,20 @@ export function authPage(mode: "setup" | "login"): string {
     <p class="privacy">会话使用 HttpOnly 安全 Cookie，密码和会话令牌均不会明文写入数据库。</p>
   </section></main>
   <script>
-    const setup=${JSON.stringify(setup)};
+    const setup=${JSON.stringify(setup)};const locale=${JSON.stringify(locale)};
     const form=document.querySelector('#authForm');const error=document.querySelector('#error');const button=document.querySelector('#submit');
-    form.addEventListener('submit',async event=>{event.preventDefault();error.textContent='';const username=document.querySelector('#username').value.trim();const password=document.querySelector('#password').value;if(setup&&password!==document.querySelector('#confirm').value){error.textContent='两次输入的密码不一致';return}button.disabled=true;button.textContent=setup?'正在创建…':'正在登录…';try{const response=await fetch(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username,password})});const data=await response.json();if(!response.ok)throw Error(data.error?.message||'操作失败');location.href='/center'}catch(reason){error.textContent=reason.message||'操作失败';button.disabled=false;button.textContent=setup?'完成设置并进入':'登录'}});
+    form.addEventListener('submit',async event=>{event.preventDefault();error.textContent='';const username=document.querySelector('#username').value.trim();const password=document.querySelector('#password').value;if(setup&&password!==document.querySelector('#confirm').value){error.textContent='两次输入的密码不一致';return}button.disabled=true;button.textContent=setup?'正在创建…':'正在登录…';try{const response=await fetch(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username,password,locale})});const data=await response.json();if(!response.ok)throw Error(data.error?.message||'操作失败');location.href='/center'}catch(reason){error.textContent=reason.message||'操作失败';button.disabled=false;button.textContent=setup?'完成设置并进入':'登录'}});
   </script>
 </body></html>`;
+  if (locale === "zh") return page;
+  return localizeEnglish(page, authEnglishTranslations)
+    .replace('<html lang="zh-CN">', '<html lang="en">')
+    .replace(`href="/en/${mode}" lang="en">EN</a>`, `href="/${mode}" lang="zh-CN">中文</a>`)
+    .replaceAll('href="/"', 'href="/en"')
+    .replace("location.href='/center'", "location.href='/en/center'");
 }
 
-export const applicationPage = `<!doctype html>
+const zhApplicationPage = `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
@@ -178,15 +184,15 @@ export const applicationPage = `<!doctype html>
     .provider-layout{grid-template-columns:minmax(0,1fr) 340px;gap:44px}.provider-list{border-color:var(--ink)}.provider-row{padding:17px 2px;border-color:var(--line)}.provider-mark{border-radius:0;background:var(--orange);color:var(--ink);border:1px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}.provider-row h2{font-size:15px}.text-button{color:#a94408;font-weight:700}.danger-button{color:#b72f25}.provider-summary{top:28px}.route-line{border-color:var(--line)}.route-label{font:700 10px monospace;letter-spacing:.04em}.provider-status{border-radius:0;background:#e5f3e9}.provider-status.failed{background:#fce9e7}.provider-status.neutral{background:#f0eae4}
     dialog{border-radius:0;border:1px solid var(--ink);box-shadow:12px 12px 0 var(--orange)}dialog::backdrop{background:#17120fb5;backdrop-filter:blur(3px)}.modal{padding:28px}.modal h2{font-size:24px}.key,.prompt{border-radius:0;background:#f6f0ea;border:1px solid var(--line)}.copy{color:#a94408}.field input,.field select{border-radius:0;background:#fffaf5}.field input:focus,.field select:focus{border-color:var(--orange);box-shadow:0 0 0 3px #f6821f22}.check-line input{accent-color:var(--orange)}
     .mobile-create{border-radius:0;box-shadow:5px 5px 0 var(--orange)}.loading{animation:pulse 1.2s infinite}@media(max-width:1100px){.apps{grid-template-columns:1fr 1fr}}
-    @media(max-width:760px){.topbar{position:sticky;inset:auto;top:0;width:100%;height:58px}.topbar-inner{width:calc(100% - 28px);height:100%;padding:0;flex-direction:row;align-items:center}.brand{font-size:17px;padding:0}.nav{display:flex;margin-left:auto;gap:0}.nav a{padding:8px 7px;border-left:0;border-bottom:2px solid transparent;font-size:11px}.nav a.active{border-bottom-color:var(--orange)}.account{margin:0 0 0 4px;padding:0;border:0}.identity{display:none}.logout{font-size:11px}main{margin:0;width:calc(100% - 28px);padding:34px 0 76px}.page-head{display:block;margin-bottom:22px}.page-head h1{font-size:30px}.page-head .primary{display:inline-flex;margin-top:18px}#deploy .page-head .primary{display:none}.apps{grid-template-columns:1fr}.app{min-height:305px}.deploy-layout,.provider-layout{grid-template-columns:1fr;gap:28px}.session-panel{order:2}.provider-summary{order:-1;position:static}.provider-row{grid-template-columns:42px 1fr}.provider-actions{grid-column:2;justify-content:flex-start}.mobile-create{display:block;position:fixed;right:17px;bottom:17px;z-index:15}.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.modal{padding:22px}}
+    @media(max-width:760px){.topbar{position:sticky;inset:auto;top:0;width:100%;height:58px}.topbar-inner{width:calc(100% - 28px);height:100%;padding:0;flex-direction:row;align-items:center}.brand{font-size:17px;padding:0}.nav{display:flex;margin-left:auto;gap:0}.nav a{padding:8px 7px;border-left:0;border-bottom:2px solid transparent;font-size:0}.nav a:after{content:attr(data-short);font-size:11px}.nav a.active{border-bottom-color:var(--orange)}.account{display:flex;align-items:center;gap:5px;margin:0 0 0 3px;padding:0;border:0}.identity{display:none}.logout{font-size:10px;padding:5px 1px}main{margin:0;width:calc(100% - 28px);padding:34px 0 76px}.page-head{display:block;margin-bottom:22px}.page-head h1{font-size:30px}.page-head .primary{display:inline-flex;margin-top:18px}#deploy .page-head .primary{display:none}.apps{grid-template-columns:1fr}.app{min-height:305px}.deploy-layout,.provider-layout{grid-template-columns:1fr;gap:28px}.session-panel{order:2}.provider-summary{order:-1;position:static}.provider-row{grid-template-columns:42px 1fr}.provider-actions{grid-column:2;justify-content:flex-start}.mobile-create{display:block;position:fixed;right:17px;bottom:17px;z-index:15}.form-grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.modal{padding:22px}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
   </style>
 </head>
 <body>
   <header class="topbar"><div class="topbar-inner">
     <a class="brand" href="/"><i>EZ</i>deploy</a>
-    <nav class="nav"><a data-path="/center" href="/center">我的应用</a><a data-path="/deploy" href="/deploy">部署设置</a><a data-path="/settings/ai" href="/settings/ai">AI 设置</a></nav>
-    <div class="account"><div class="identity" id="identity">正在验证身份…</div><button class="logout" id="logout" type="button">退出</button></div>
+    <nav class="nav"><a data-path="/center" data-short="应用" href="/center">我的应用</a><a data-path="/deploy" data-short="部署" href="/deploy">部署设置</a><a data-path="/settings/ai" data-short="AI" href="/settings/ai">AI 设置</a></nav>
+    <div class="account"><a class="logout" id="localeSwitch" href="/en/center" lang="en">EN</a><div class="identity" id="identity">正在验证身份…</div><button class="logout" id="logout" type="button">退出</button></div>
   </div></header>
   <main>
     <section class="view" id="catalog">
@@ -219,6 +225,7 @@ export const applicationPage = `<!doctype html>
     const current=location.pathname==='/deploy'?'deploy':location.pathname==='/settings/ai'?'providers':'catalog';
     document.querySelector('#'+current).classList.add('active');
     document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.path===location.pathname));
+    document.querySelector('#localeSwitch').href=location.pathname.startsWith('/en/')?location.pathname.slice(3):'/en'+location.pathname;
     document.querySelector('#mobileCreate').style.display=current==='deploy'?'':'none';
     function initials(name){return String(name||'ZA').trim().split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase().slice(0,2)}
     async function loadMe(){const r=await fetch('/api/me');if(r.status===401){location.href='/login';return}if(!r.ok)throw Error('身份验证失败');state.me=await r.json();document.querySelector('#identity').textContent=state.me.username}
@@ -247,7 +254,7 @@ export const applicationPage = `<!doctype html>
     async function deleteProvider(id){if(!confirm('删除后，使用这个 Provider 的请求会立即切换到其他默认配置。继续吗？'))return;const r=await fetch('/api/ai/providers/'+id,{method:'DELETE'});if(!r.ok){const data=await apiData(r);return alert(data.error?.message||'删除失败')}await loadProviders()}window.deleteProvider=deleteProvider;
     document.querySelector('#providerForm').onsubmit=async event=>{event.preventDefault();const id=document.querySelector('#providerId').value;const body={providerType:providerType.value,name:document.querySelector('#providerName').value,baseUrl:document.querySelector('#providerBaseUrl').value,apiKey:document.querySelector('#providerApiKey').value,defaultModel:document.querySelector('#providerDefaultModel').value,models:document.querySelector('#providerModels').value.split(',').map(x=>x.trim()).filter(Boolean),enabled:document.querySelector('#providerEnabled').checked,isDefault:document.querySelector('#providerDefault').checked};const r=await fetch('/api/ai/providers'+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const data=await apiData(r);if(!r.ok){document.querySelector('#providerError').textContent=data.error?.message||'保存失败';return}document.querySelector('#providerDialog').close();await loadProviders()};
     document.querySelector('#search')?.addEventListener('input',drawApps);
-    async function createPrompt(){const r=await fetch('/api/connections',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({label:'Codex / WorkBuddy · 长期部署'})});const data=await r.json();if(!r.ok)return alert(data.error?.message||'创建失败');document.querySelector('#keyValue').textContent=data.connectionKey;document.querySelector('#agentPrompt').value=data.agentPrompt;document.querySelector('#keyDialog').showModal();await loadConnections()}
+    async function createPrompt(){const r=await fetch('/api/connections',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({label:'Codex / WorkBuddy · 长期部署',locale:'zh'})});const data=await r.json();if(!r.ok)return alert(data.error?.message||'创建失败');document.querySelector('#keyValue').textContent=data.connectionKey;document.querySelector('#agentPrompt').value=data.agentPrompt;document.querySelector('#keyDialog').showModal();await loadConnections()}
     document.querySelector('#create')?.addEventListener('click',createPrompt);document.querySelector('#mobileCreate').addEventListener('click',createPrompt);
     async function revokeConnection(id){if(!confirm('撤销后，这个 Agent 会话将立即失效。继续吗？'))return;await fetch('/api/connections/'+id,{method:'DELETE'});await loadConnections()}window.revokeConnection=revokeConnection;
     document.querySelectorAll('[data-copy]').forEach(button=>button.onclick=async()=>{const target=document.querySelector('#'+button.dataset.copy);await navigator.clipboard.writeText(target.value??target.textContent);const old=button.textContent;button.textContent='已复制';setTimeout(()=>button.textContent=old,1200)});
@@ -256,3 +263,84 @@ export const applicationPage = `<!doctype html>
     const jobs=[loadMe()];if(current==='catalog')jobs.push(loadApps());else if(current==='deploy')jobs.push(loadConnections());else jobs.push(loadProviders());Promise.all(jobs).catch(error=>{const target=document.querySelector(current==='catalog'?'#apps':current==='deploy'?'#connections':'#providerList');target.innerHTML='<div class="empty">加载失败：'+esc(error.message)+'</div>'});
   </script>
 </body></html>`;
+
+const authEnglishTranslations: Array<[string, string]> = [
+  ["这是此部署中心唯一的管理账号。设置完成后，你可以管理应用、部署连接和 AI Provider。", "This is the only administrator account for this deployment center. Once set up, you can manage apps, deployment access, and AI providers."],
+  ["会话使用 HttpOnly 安全 Cookie，密码和会话令牌均不会明文写入数据库。", "Sessions use secure HttpOnly cookies. Passwords and session tokens are never stored in plaintext."],
+  ["在一个简洁的控制台里管理应用、部署凭证和 AI Provider。基础设施由 EZdeploy 统一处理。", "Manage apps, deployment credentials, and AI providers in one focused console. EZdeploy handles the infrastructure."],
+  ["至少 10 个字符。密码只用于生成不可逆派生值，不会明文保存。", "Use at least 10 characters. Your password is irreversibly derived and never stored in plaintext."],
+  ["登录你的个人应用中心，继续部署和管理应用。", "Sign in to your personal app center to deploy and manage apps."],
+  ["创建你的管理员账号", "Create your administrator account"], ["完成设置并进入", "Finish setup and continue"],
+  ["一句话触发部署", "Deploy with one sentence"], ["确认资源与访问计划", "Confirm resources and access"], ["获得健康应用链接", "Get a healthy app URL"],
+  ["你的应用，<br><span>你的云边界。</span>", "Your apps.<br><span>Your cloud boundary.</span>"],
+  ["设置管理员", "Set up administrator"], ["管理员登录", "Administrator sign in"], ["管理员账号", "Administrator username"],
+  ["确认密码", "Confirm password"], ["欢迎回来", "Welcome back"], ["返回首页", "Back to home"],
+  ["正在创建…", "Creating…"], ["正在登录…", "Signing in…"], ["两次输入的密码不一致", "Passwords do not match"],
+  ["操作失败", "Something went wrong"], ["密码", "Password"], ["登录", "Sign in"],
+];
+
+const applicationEnglishTranslations: Array<[string, string]> = [
+  ["配置一次 Skill 和长期 Key，以后直接对 Agent 说“部署到应用中心”。", "Configure the Skill and a persistent key once, then simply tell your agent to “deploy to my app center”."],
+  ["长期 Key 只能用于你的部署中心。不要把它写入项目、构建产物或聊天回复；如有泄露，可在右侧立即撤销。", "This persistent key only works with your deployment center. Keep it out of projects, build output, and chat replies; revoke it here immediately if exposed."],
+  ["它只显示这一次。复制整段安装提示词给 Agent，之后直接说“部署到应用中心”即可。", "It is shown only once. Give the full setup prompt to your agent; afterward, just say “deploy to my app center”."],
+  ["所有请求中的 <code>default-chat</code> 会路由到当前默认 Provider。Embedding 暂时继续使用 Cloudflare Workers AI。", "The <code>default-chat</code> model routes to the current default provider. Embeddings continue to use Cloudflare Workers AI for now."],
+  ["选择预设可自动填写官方兼容地址和推荐模型，保存前不会发出模型请求。", "Choose a preset to fill the compatible endpoint and recommended models. No model request is sent before you save."],
+  ["以后不必再次安装或授权；Agent 会先展示运行时、资源和访问计划。", "No repeated setup or authorization. Your agent will show the runtime, resources, and access plan first."],
+  ["管理模型供应商、默认模型和 API Key。应用只接收 EZdeploy 签发的虚拟密钥。", "Manage model providers, default models, and API keys. Apps receive only virtual keys issued by EZdeploy."],
+  ["Agent 自动安装部署 Skill，并把凭证保存在项目目录之外。", "Your agent installs the deployment Skill and stores credentials outside the project."],
+  ["构建、域名和健康检查通过后，应用自动出现在这里。", "After build, domain, and health checks pass, the app appears here automatically."],
+  ["还没有应用。安装部署 Skill 后，对 Agent 说“部署到应用中心”吧。", "No apps yet. Install the deployment Skill, then tell your agent to “deploy to my app center”."],
+  ["删除后，使用这个 Provider 的请求会立即切换到其他默认配置。继续吗？", "Requests using this provider will immediately switch to another default configuration. Continue?"],
+  ["密钥通过 TLS 发送到 AI Proxy，随后使用独立加密密钥保存。", "The key is sent to the AI Proxy over TLS and stored using a separate encryption key."],
+  ["撤销后，这个 Agent 会话将立即失效。继续吗？", "Revoking will immediately invalidate this agent session. Continue?"],
+  ["打开已发布应用，查看当前状态与绑定能力。", "Open published apps and review their current status and connected capabilities."],
+  ["Key 只显示一次，长期有效，直到你主动撤销。", "The key is shown once and remains valid until you revoke it."],
+  ["查看长期 Key 的使用时间，或立即撤销。", "Review persistent key activity or revoke access immediately."],
+  ["尚未添加 Provider。未配置时继续使用 Cloudflare Workers AI。", "No providers added. Cloudflare Workers AI is used until you configure one."],
+  ["AES-256-GCM 加密 · 永不回显完整密钥", "AES-256-GCM encrypted · Full keys are never revealed"],
+  ["未配置，使用 Cloudflare 默认模型", "Not configured; using the default Cloudflare model"],
+  ["编辑时留空表示保持原密钥", "Leave blank while editing to keep the current key"],
+  ["说“部署到应用中心”", "Say “deploy to my app center”"], ["复制安装提示词", "Copy the setup prompt"],
+  ["确认并获得链接", "Confirm and get the URL"], ["生成长期部署 Key", "Generate persistent deployment key"],
+  ["长期部署 Key 已生成", "Persistent deployment key created"], ["复制安装提示词", "Copy setup prompt"],
+  ["默认模型路由", "Default model routing"], ["添加 AI Provider", "Add AI provider"], ["编辑 AI Provider", "Edit AI provider"],
+  ["部署新应用", "Deploy new app"], ["搜索应用或基础能力", "Search apps or capabilities"], ["正在读取应用目录…", "Loading app catalog…"],
+  ["我的应用", "My apps"], ["部署设置", "Deployment"], ["AI 设置", "AI settings"], ["正在验证身份…", "Verifying identity…"], ["退出", "Sign out"],
+  ["data-short=\"应用\"", "data-short=\"Apps\""], ["data-short=\"部署\"", "data-short=\"Deploy\""],
+  ["应用中心", "App center"], ["页面预览", "preview"], ["未发布", "Not published"], ["数据库", "Database"], ["对象存储", "Object storage"],
+  ["受保护访问", "Protected access"], ["公开访问", "Public access"], [" 个应用", " apps"],
+  ["连接读取失败", "Could not load deployment access"], ["部署连接", "Deployment access"], ["撤销", "Revoke"], ["长期有效", "Persistent"], ["临时连接", "Temporary"],
+  ["创建于 ", "Created "], ["有效至 ", "Expires "], ["最近使用 ", "Last used "], ["尚未使用", "Never used"], ["暂无部署连接", "No deployment access yet"],
+  ["正在读取…", "Loading…"], ["正在读取 Provider…", "Loading providers…"], ["添加 Provider", "Add provider"],
+  ["显示名称", "Display name"], ["默认模型", "Default model"], ["可用模型", "Available models"], ["逗号分隔", "Comma-separated"],
+  ["启用这个 Provider", "Enable this provider"], ["设为默认 Chat Provider", "Set as default chat provider"], ["取消", "Cancel"], ["保存配置", "Save configuration"],
+  ["服务暂不可用", "Service temporarily unavailable"], ["身份验证失败", "Authentication failed"], ["应用目录加载失败", "Could not load app catalog"],
+  ["自定义 Provider", "Custom provider"], ["连接正常", "Connected"], ["测试失败", "Test failed"], ["尚未测试", "Not tested"],
+  ["Provider 读取失败", "Could not load providers"], [" · 默认", " · Default"], ["测试", "Test"], ["编辑", "Edit"], ["删除", "Delete"],
+  ["连接成功", "Connection successful"], ["连接失败", "Connection failed"], ["删除失败", "Delete failed"], ["保存失败", "Save failed"],
+  ["创建失败", "Creation failed"], ["复制 Key", "Copy key"], ["关闭", "Close"], ["已复制", "Copied"], ["加载失败：", "Loading failed: "],
+  ["长期部署", "Persistent deployment"], ["生成长期 Key", "Generate persistent key"], ["密钥安全", "Key security"],
+];
+
+function localizeEnglish(page: string, translations: Array<[string, string]>): string {
+  return [...translations].sort((a, b) => b[0].length - a[0].length)
+    .reduce((output, [source, target]) => output.replaceAll(source, target), page);
+}
+
+export function applicationPageFor(locale: "zh" | "en" = "zh"): string {
+  if (locale === "zh") return zhApplicationPage;
+  return localizeEnglish(zhApplicationPage, applicationEnglishTranslations)
+    .replace('<html lang="zh-CN">', '<html lang="en">')
+    .replaceAll('data-path="/', 'data-path="/en/')
+    .replaceAll('href="/center"', 'href="/en/center"')
+    .replaceAll('href="/deploy"', 'href="/en/deploy"')
+    .replaceAll('href="/settings/ai"', 'href="/en/settings/ai"')
+    .replace('href="/en/center" lang="en">EN</a>', 'href="/center" lang="zh-CN">中文</a>')
+    .replace('<a class="brand" href="/">', '<a class="brand" href="/en">')
+    .replace('const current=location.pathname===\'/deploy\'?\'deploy\':location.pathname===\'/settings/ai\'?\'providers\':\'catalog\';', "const current=location.pathname==='/en/deploy'?'deploy':location.pathname==='/en/settings/ai'?'providers':'catalog';")
+    .replace("location.href='/login'", "location.href='/en/login'")
+    .replace("location.href='/login'", "location.href='/en/login'")
+    .replace("locale:'zh'", "locale:'en'");
+}
+
+export const applicationPage = applicationPageFor("zh");

@@ -6,7 +6,7 @@ import {
   requestHasSameOrigin,
   setupAdmin,
 } from "./auth.js";
-import { applicationPage, authPage, landingPage } from "./ui.js";
+import { applicationPageFor, authPage, landingPageFor } from "./ui.js";
 
 interface Env {
   DB: D1Database;
@@ -203,7 +203,21 @@ ${code}
 不要把连接码或兑换得到的短期凭证写入项目文件、构建产物或最终回复。`;
 }
 
-export function buildPersistentAgentPrompt(key: string, env: Pick<Env, "AGENT_GATEWAY_URL">): string {
+export function buildPersistentAgentPrompt(key: string, env: Pick<Env, "AGENT_GATEWAY_URL">, locale: "zh" | "en" = "zh"): string {
+  if (locale === "en") return `Install and configure the EZdeploy Deployment Skill for me. In the future, whenever I say “deploy to my app center”, “publish to EZdeploy”, “ship this app”, or anything similar, use this Skill directly.
+
+Setup and deployment guide:
+${env.AGENT_GATEWAY_URL}/agent.md
+
+Skill:
+${env.AGENT_GATEWAY_URL}/skill/ezdeploy-deploy/SKILL.md
+
+My persistent deployment key:
+${key}
+
+Install the Skill in this agent's user-level Skill directory and store the API URL and key in the user-level credentials directory with current-user-only permissions. Never put the key in the project, source code, build output, logs, or final response.
+
+After installation, tell me which trigger phrases are supported. For future deployments, analyze the project and show me the deployment plan first. Wait for my confirmation before building and publishing, then return the application URL only after its health check passes.`;
   return `请为我安装并配置 EZdeploy Deployment Skill。以后当我说“部署到应用中心”、“发布到 EZdeploy”、“上线这个应用”或意思相近的话时，直接使用这个 Skill。
 
 安装与部署说明：
@@ -223,22 +237,24 @@ ${key}
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
+    const locale: "zh" | "en" = url.pathname === "/en" || url.pathname.startsWith("/en/") ? "en" : "zh";
+    const localizedPath = (path: string) => locale === "en" ? `/en${path}` : path;
     if (url.pathname === "/health") return json({ status: "ok", service: "ezdeploy-app-center" });
-    if (url.pathname === "/") return new Response(landingPage, { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+    if (["/", "/en"].includes(url.pathname)) return new Response(landingPageFor(locale), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
 
     if (url.pathname === "/api/auth/status" && request.method === "GET") {
       const admin = await authenticateAdmin(request, env);
       return json({ configured: await adminConfigured(env), authenticated: Boolean(admin), username: admin?.username });
     }
-    if (url.pathname === "/setup" && request.method === "GET") {
-      if (await adminConfigured(env)) return Response.redirect(new URL("/login", url), 302);
-      return new Response(authPage("setup"), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+    if (["/setup", "/en/setup"].includes(url.pathname) && request.method === "GET") {
+      if (await adminConfigured(env)) return Response.redirect(new URL(localizedPath("/login"), url), 302);
+      return new Response(authPage("setup", locale), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
     }
-    if (url.pathname === "/login" && request.method === "GET") {
+    if (["/login", "/en/login"].includes(url.pathname) && request.method === "GET") {
       const admin = await authenticateAdmin(request, env);
-      if (admin) return Response.redirect(new URL("/center", url), 302);
-      if (!await adminConfigured(env)) return Response.redirect(new URL("/setup", url), 302);
-      return new Response(authPage("login"), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+      if (admin) return Response.redirect(new URL(localizedPath("/center"), url), 302);
+      if (!await adminConfigured(env)) return Response.redirect(new URL(localizedPath("/setup"), url), 302);
+      return new Response(authPage("login", locale), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
     }
     if (["/api/auth/setup", "/api/auth/login", "/api/auth/logout"].includes(url.pathname)) {
       if (request.method !== "POST") return json({ error: { code: "METHOD_NOT_ALLOWED", message: "POST required" } }, 405);
@@ -248,8 +264,9 @@ export default {
           headers: { ...responseHeaders, "content-type": "application/json", "set-cookie": await logoutAdmin(request, env) },
         });
       }
-      const input = await request.json<{ username?: string; password?: string }>()
-        .catch((): { username?: string; password?: string } => ({}));
+      const input = await request.json<{ username?: string; password?: string; locale?: "zh" | "en" }>()
+        .catch((): { username?: string; password?: string; locale?: "zh" | "en" } => ({}));
+      const english = input.locale === "en";
       try {
         if (url.pathname === "/api/auth/setup") {
           const result = await setupAdmin(env, input.username?.trim() ?? "", input.password ?? "");
@@ -259,28 +276,32 @@ export default {
           });
         }
         const result = await loginAdmin(request, env, input.username?.trim() ?? "", input.password ?? "");
-        if (!result) return json({ error: { code: "INVALID_CREDENTIALS", message: "账号或密码不正确" } }, 401);
+        if (!result) return json({ error: { code: "INVALID_CREDENTIALS", message: english ? "Incorrect username or password" : "账号或密码不正确" } }, 401);
         return new Response(JSON.stringify({ username: result.admin.username }), {
           headers: { ...responseHeaders, "content-type": "application/json", "set-cookie": result.setCookie },
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "认证失败";
-        return json({ error: { code: message.includes("尝试过多") ? "RATE_LIMITED" : "AUTH_FAILED", message } }, message.includes("尝试过多") ? 429 : 400);
+        const rawMessage = error instanceof Error ? error.message : "认证失败";
+        const rateLimited = rawMessage.includes("尝试过多");
+        const message = english
+          ? rawMessage.replace("尝试过多，请稍后再试", "Too many attempts. Try again later").replace("认证失败", "Authentication failed")
+          : rawMessage;
+        return json({ error: { code: rateLimited ? "RATE_LIMITED" : "AUTH_FAILED", message } }, rateLimited ? 429 : 400);
       }
     }
 
     const admin = await authenticateAdmin(request, env);
     if (!admin) {
       if (!url.pathname.startsWith("/api/")) {
-        return Response.redirect(new URL(await adminConfigured(env) ? "/login" : "/setup", url), 302);
+        return Response.redirect(new URL(localizedPath(await adminConfigured(env) ? "/login" : "/setup"), url), 302);
       }
       return json({ error: { code: "UNAUTHORIZED", message: "Administrator login required" } }, 401);
     }
     if (!["GET", "HEAD"].includes(request.method) && !requestHasSameOrigin(request)) {
       return json({ error: { code: "FORBIDDEN", message: "Same-origin request required" } }, 403);
     }
-    if (["/center", "/deploy", "/settings/ai"].includes(url.pathname)) {
-      return new Response(applicationPage, { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
+    if (["/center", "/deploy", "/settings/ai", "/en/center", "/en/deploy", "/en/settings/ai"].includes(url.pathname)) {
+      return new Response(applicationPageFor(locale), { headers: { ...responseHeaders, "content-type": "text/html; charset=utf-8" } });
     }
     if (url.pathname === "/api/apps") return json(await listApps(env));
     if (url.pathname === "/api/me") return json({ username: admin.username, administrator: true });
@@ -320,10 +341,10 @@ export default {
       }, 201);
     }
     if (url.pathname === "/api/connections" && request.method === "POST") {
+      const input: { label?: string; locale?: "zh" | "en" } = await request.json<{ label?: string; locale?: "zh" | "en" }>().catch(() => ({}));
       const count = await env.DB.prepare("SELECT count(*) AS value FROM cloud_agent_tokens WHERE owner_id=? AND active=1 AND token_kind='persistent'")
         .bind(admin.ownerId).first<{ value: number }>();
-      if (Number(count?.value ?? 0) >= 5) return json({ error: { code: "LIMIT_REACHED", message: "最多保留 5 个有效连接，请先撤销旧连接" } }, 409);
-      const input: { label?: string } = await request.json<{ label?: string }>().catch(() => ({}));
+      if (Number(count?.value ?? 0) >= 5) return json({ error: { code: "LIMIT_REACHED", message: input.locale === "en" ? "You can keep up to 5 active connections. Revoke an old connection first" : "最多保留 5 个有效连接，请先撤销旧连接" } }, 409);
       const key = connectionKey();
       const id = crypto.randomUUID();
       const createdAt = new Date().toISOString();
@@ -343,7 +364,7 @@ export default {
         connectionKey: key,
         documentationUrl: `${env.AGENT_GATEWAY_URL}/agent.md`,
         skillUrl: `${env.AGENT_GATEWAY_URL}/skill/ezdeploy-deploy/SKILL.md`,
-        agentPrompt: buildPersistentAgentPrompt(key, env),
+        agentPrompt: buildPersistentAgentPrompt(key, env, input.locale === "en" ? "en" : "zh"),
         createdAt,
         expiresAt: null,
       }, 201);

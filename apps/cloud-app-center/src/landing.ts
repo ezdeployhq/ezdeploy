@@ -1,4 +1,4 @@
-export const landingPage = `<!doctype html>
+const zhLandingPage = `<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -16,7 +16,7 @@ export const landingPage = `<!doctype html>
     @media(max-width:850px){.nav-links a:not(.nav-cta){display:none}.hero{grid-template-columns:1fr;padding-top:120px}.network{height:390px}.steps{grid-template-columns:1fr 1fr}.step:nth-child(2){border-right:0}.step:nth-child(-n+2){border-bottom:1px solid var(--ink)}.phrase{grid-template-columns:1fr}.trust-grid{grid-template-columns:1fr}.trust-main{padding-right:0}.trust-side{border-left:0;border-top:1px solid var(--ink);padding-left:0}.hero h1{font-size:66px}}@media(max-width:520px){.steps{grid-template-columns:1fr}.step{border-right:0!important;border-bottom:1px solid var(--ink)!important;min-height:220px}.step:last-child{border-bottom:0!important}.actions{flex-direction:column}.network{height:320px}.node{font-size:10px;padding:9px}.node.core{font-size:14px}.hero h1{font-size:52px}.block h2{font-size:42px}.footer{display:block}.footer span{display:block;margin-top:8px}}@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head><body>
-  <header class="top"><nav class="nav"><a class="logo" href="/"><span>EZ</span>deploy</a><div class="nav-links"><a href="#how">工作方式</a><a href="#security">安全设计</a><a class="nav-cta" href="/center">进入应用中心 →</a></div></nav></header>
+  <header class="top"><nav class="nav"><a class="logo" href="/"><span>EZ</span>deploy</a><div class="nav-links"><a href="#how">工作方式</a><a href="#security">安全设计</a><a href="/en" lang="en">EN</a><a class="nav-cta" href="/center">进入应用中心 →</a></div></nav></header>
   <main>
     <section class="hero"><div class="hero-copy"><div class="tag">Personal deployment network</div><h1>一句话，<em>应用就上线。</em></h1><p>安装一次 EZdeploy Skill，保存一个长期 Key。以后在 Codex 或 WorkBuddy 里说“部署到应用中心”，就能获得可访问的正式链接。</p><div class="actions"><a class="btn dark" href="/deploy">安装部署 Skill</a><a class="btn light" href="#how">看看怎么工作 ↓</a></div></div><div class="network" aria-label="应用从 Agent 流向个人部署中心的网络图"><div class="node a">CODEX</div><div class="node b">WORKBUDDY</div><div class="node core">EZdeploy</div><div class="node c">AI / DB</div><div class="node d">apps.wali.uno</div><i class="flow-dot"></i></div></section>
     <div class="marquee"><div>INSTALL ONCE <span>◆</span> SAY “部署到应用中心” <span>◆</span> CONFIRM PLAN <span>◆</span> GET A HEALTHY URL <span>◆</span> INSTALL ONCE <span>◆</span> SAY “部署到应用中心” <span>◆</span> CONFIRM PLAN <span>◆</span> GET A HEALTHY URL <span>◆</span></div></div>
@@ -27,3 +27,48 @@ export const landingPage = `<!doctype html>
   </main><footer class="footer">EZdeploy · 开源个人应用部署中心 <span>Agent-native · Self-hostable · Cloudflare</span></footer>
   <script>const steps=[...document.querySelectorAll('.step')];if('IntersectionObserver'in window){new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){steps.forEach(x=>x.classList.remove('active'));e.target.classList.add('active')}}),{threshold:.65}).observe(steps[0]);steps.slice(1).forEach(x=>new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&steps.forEach(y=>y.classList.toggle('active',y===e.target))),{threshold:.65}).observe(x))}</script>
 </body></html>`;
+
+const englishLandingTranslations: Array<[string, string]> = [
+  ["EZdeploy 是安装一次、以后一句话发布的个人应用部署中心。", "EZdeploy is your personal app deployment center: install once, then publish with one sentence."],
+  ["EZdeploy — 一句话，部署到应用中心", "EZdeploy — Deploy with one sentence"],
+  ["应用从 Agent 流向个人部署中心的网络图", "Network showing an app flowing from an agent to your personal deployment center"],
+  ["安装一次 EZdeploy Skill，保存一个长期 Key。以后在 Codex 或 WorkBuddy 里说“部署到应用中心”，就能获得可访问的正式链接。", "Install the EZdeploy Skill once and save one persistent key. Then tell Codex or WorkBuddy to “deploy to my app center” and get a production-ready URL."],
+  ["第一次设置。此后只负责表达想法。", "Set it up once. Then focus on your ideas."],
+  ["复制安装提示词，让 Agent 认识你的个人应用中心。", "Copy the setup prompt so your agent knows your personal app center."],
+  ["只配置一次，直到你在管理页主动撤销。", "Configure it once; it remains valid until you revoke it."],
+  ["“部署到应用中心”会触发项目识别和部署计划。", "“Deploy to my app center” triggers project detection and a deployment plan."],
+  ["确认资源与访问范围后，等待健康链接返回。", "Confirm resources and access, then receive a healthy app URL."],
+  ["Skill 会识别项目类型、构建方式以及数据库、对象存储和 AI 能力需求。你只需要确认计划，不需要每次安装工具或重新授权。", "The Skill detects the project type, build method, and database, storage, or AI needs. You only confirm the plan—no repeated setup or authorization."],
+  ["密钥只显示一次，随时可以撤销。", "Your key is shown once and can be revoked anytime."],
+  ["部署 Key 保存在项目目录之外，服务端只存哈希。它不会进入代码、构建产物或聊天回复；每次发布仍需确认部署计划。", "The deployment key stays outside the project and only its hash is stored server-side. It never enters source code, build output, or chat replies; every release still requires plan confirmation."],
+  ["AI Provider、数据库和对象存储由控制面集中管理，应用按需获得最小权限。", "AI providers, databases, and object storage are managed centrally, while each app receives only the permissions it needs."],
+  ["一句话，<em>应用就上线。</em>", "One sentence.<em>Your app is live.</em>"],
+  ["工作方式", "How it works"], ["安全设计", "Security"], ["进入应用中心 →", "Open app center →"],
+  ["安装部署 Skill", "Install deployment Skill"], ["看看怎么工作 ↓", "See how it works ↓"],
+  ["部署到应用中心", "deploy to my app center"], ["安装 Skill", "Install the Skill"],
+  ["保存长期 Key", "Save a persistent key"], ["说出部署意图", "Ask to deploy"], ["确认并上线", "Confirm and publish"],
+  ["不记命令。说人话。", "No commands. Just ask."], ["长期有效，不等于失去控制。", "Persistent does not mean uncontrolled."],
+  ["统一基础能力", "Shared platform services"], ["下一次发布，只说一句话。", "Publish next time with one sentence."],
+  ["设置我的部署 Skill →", "Set up my deployment Skill →"], ["开源个人应用部署中心", "Open-source personal app deployment center"],
+  ["YOU</span> 部署到应用中心", "YOU</span> deploy to my app center"], ["已识别 Vite 应用", "Vite app detected"],
+  ["运行时 static · 公开访问", "Runtime: static · Public access"], ["不需要数据库 / 存储 / AI", "No database / storage / AI required"],
+  ["确认后将发布到 apps.wali.uno", "After confirmation, publish to apps.wali.uno"],
+  ["SAY “部署到应用中心”", "SAY “DEPLOY TO MY APP CENTER”"],
+];
+
+function translatePage(page: string, translations: Array<[string, string]>): string {
+  return [...translations].sort((a, b) => b[0].length - a[0].length)
+    .reduce((output, [source, target]) => output.replaceAll(source, target), page);
+}
+
+export function landingPageFor(locale: "zh" | "en" = "zh"): string {
+  if (locale === "zh") return zhLandingPage;
+  return translatePage(zhLandingPage, englishLandingTranslations)
+    .replace('<html lang="zh-CN">', '<html lang="en">')
+    .replace('href="/en" lang="en">EN</a>', 'href="/" lang="zh-CN">中文</a>')
+    .replaceAll('href="/center"', 'href="/en/center"')
+    .replaceAll('href="/deploy"', 'href="/en/deploy"')
+    .replace('href="/"', 'href="/en"');
+}
+
+export const landingPage = landingPageFor("zh");

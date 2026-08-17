@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildAgentPrompt, buildPersistentAgentPrompt, createConnectCode } from "./index.js";
-import { applicationPage, authPage } from "./ui.js";
+import { applicationPage, applicationPageFor, authPage, landingPageFor } from "./ui.js";
 
 describe("zero-install application center onboarding", () => {
   it("creates human-readable single-use code shapes", () => {
@@ -38,5 +38,30 @@ describe("zero-install application center onboarding", () => {
     expect(applicationPage).toContain("MODEL ROUTING");
     expect(authPage("login")).toContain("EZdeploy product system");
     expect(authPage("setup")).toContain("PERSONAL CONTROL PLANE");
+  });
+
+  it("renders complete English routes without changing shared API paths", () => {
+    const landing = landingPageFor("en");
+    const login = authPage("login", "en");
+    const center = applicationPageFor("en");
+    expect(landing).toContain('<html lang="en">');
+    expect(landing).toContain("Deploy with one sentence");
+    expect(landing).toContain('href="/en/center"');
+    expect(login).toContain("Administrator sign in");
+    expect(login).toContain("location.href='/en/center'");
+    expect(center).toContain("My apps");
+    expect(center).toContain('href="/en/deploy"');
+    expect(center).toContain("fetch('/api/apps')");
+    expect(center).toContain("locale:'en'");
+  });
+
+  it("produces an English persistent Skill prompt", () => {
+    const prompt = buildPersistentAgentPrompt("zao_english_key", {
+      AGENT_GATEWAY_URL: "https://deploy.apps.example.com",
+    }, "en");
+    expect(prompt).toContain("deploy to my app center");
+    expect(prompt).toContain("user-level credentials directory");
+    expect(prompt).toContain("zao_english_key");
+    expect(prompt).not.toContain("部署到应用中心");
   });
 });
