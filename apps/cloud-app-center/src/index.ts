@@ -203,6 +203,23 @@ ${code}
 不要把连接码或兑换得到的短期凭证写入项目文件、构建产物或最终回复。`;
 }
 
+export function buildPersistentAgentPrompt(key: string, env: Pick<Env, "AGENT_GATEWAY_URL">): string {
+  return `请为我安装并配置 EZdeploy Deployment Skill。以后当我说“部署到应用中心”、“发布到 EZdeploy”、“上线这个应用”或意思相近的话时，直接使用这个 Skill。
+
+安装与部署说明：
+${env.AGENT_GATEWAY_URL}/agent.md
+
+Skill：
+${env.AGENT_GATEWAY_URL}/skill/ezdeploy-deploy/SKILL.md
+
+我的长期部署 Key：
+${key}
+
+请把 Skill 安装到当前 Agent 的个人 Skill 目录，并把 API 地址与 Key 保存到用户级凭证目录；权限必须仅限当前用户。不要把 Key 写入项目、源码、构建产物、日志或最终回复。
+
+安装完成后请告诉我已支持哪些触发语。以后部署时先分析项目并展示部署计划，等我确认后再构建和发布，最终返回健康检查通过的应用链接。`;
+}
+
 export default {
   async fetch(request: Request, env: Env) {
     const url = new URL(request.url);
@@ -272,12 +289,12 @@ export default {
     }
 
     if (url.pathname === "/api/connections" && request.method === "GET") {
-      const rows = await env.DB.prepare(`SELECT id,label,created_at,last_used_at,expires_at FROM cloud_agent_tokens
+      const rows = await env.DB.prepare(`SELECT id,label,created_at,last_used_at,expires_at,token_kind FROM cloud_agent_tokens
         WHERE owner_id=? AND active=1 AND (expires_at IS NULL OR expires_at>?) ORDER BY created_at DESC`)
         .bind(admin.ownerId, new Date().toISOString()).all<Record<string, unknown>>();
       return json(rows.results.map((row) => ({
         id: row.id, label: row.label, createdAt: row.created_at, lastUsedAt: row.last_used_at,
-        expiresAt: row.expires_at,
+        expiresAt: row.expires_at, kind: row.token_kind,
       })));
     }
     if (url.pathname === "/api/connect-codes" && request.method === "POST") {
@@ -303,7 +320,7 @@ export default {
       }, 201);
     }
     if (url.pathname === "/api/connections" && request.method === "POST") {
-      const count = await env.DB.prepare("SELECT count(*) AS value FROM cloud_agent_tokens WHERE owner_id=? AND active=1")
+      const count = await env.DB.prepare("SELECT count(*) AS value FROM cloud_agent_tokens WHERE owner_id=? AND active=1 AND token_kind='persistent'")
         .bind(admin.ownerId).first<{ value: number }>();
       if (Number(count?.value ?? 0) >= 5) return json({ error: { code: "LIMIT_REACHED", message: "最多保留 5 个有效连接，请先撤销旧连接" } }, 409);
       const input: { label?: string } = await request.json<{ label?: string }>().catch(() => ({}));
@@ -311,13 +328,24 @@ export default {
       const id = crypto.randomUUID();
       const createdAt = new Date().toISOString();
       await env.DB.prepare(`INSERT INTO cloud_agent_tokens
-        (id,token_hash,owner_id,label,active,created_at) VALUES (?,?,?,?,1,?)`)
-        .bind(id, await sha256(key), admin.ownerId, input.label?.slice(0, 80) || "Codex / WorkBuddy", createdAt).run();
+        (id,token_hash,owner_id,label,active,created_at,expires_at,token_kind,scopes_json)
+        VALUES (?,?,?,?,1,?,NULL,'persistent',?)`)
+        .bind(
+          id,
+          await sha256(key),
+          admin.ownerId,
+          input.label?.slice(0, 80) || "Codex / WorkBuddy",
+          createdAt,
+          JSON.stringify(["plan", "deploy", "read", "logs", "manage"]),
+        ).run();
       return json({
         id,
         connectionKey: key,
-        agentPrompt: null,
+        documentationUrl: `${env.AGENT_GATEWAY_URL}/agent.md`,
+        skillUrl: `${env.AGENT_GATEWAY_URL}/skill/ezdeploy-deploy/SKILL.md`,
+        agentPrompt: buildPersistentAgentPrompt(key, env),
         createdAt,
+        expiresAt: null,
       }, 201);
     }
     const match = /^\/api\/connections\/([0-9a-f-]{36})$/.exec(url.pathname);

@@ -99,13 +99,14 @@ npm --workspace @ezdeploy/agent run dev
 
 The mock provider returns `.example.test` URLs and must be selected explicitly. Production
 uses the online `@ezdeploy/cloud-control-plane`. The default owner flow requires no prior
-installation or MCP configuration: the application center generates a prompt containing a
-public `agent.md` URL and a two-hour, single-use connection code. Terminal-capable Agents
-download a versioned standalone client into an operating-system temporary directory;
+installation or MCP configuration on every project: the application center generates a
+long-lived, revocable personal deployment key plus an install prompt for the public
+EZdeploy Skill. After this one-time setup, phrases such as “部署到应用中心” trigger the
+workflow. Terminal-capable Agents download a versioned standalone client into an operating-system temporary directory;
 Remote MCP and an operator-published `@ezdeploy/agent` package remain optional enhanced
 distribution paths. No local
 control-plane daemon or owner-visible Cloudflare Access service credential is required.
-The same canonical workflow is discoverable through `agent.md`, `skill.md`, `agents.md`,
+The same canonical workflow is discoverable through `agent.md`, the installable Skill, `skill.md`, `agents.md`,
 `llms.txt`, `/.well-known/ezdeploy.json`, and `openapi.json`. The old well-known path and
 `ZAODEPLOY_*` environment variables are retained as stable legacy protocol identifiers.
 

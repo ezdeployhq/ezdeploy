@@ -6,7 +6,7 @@ describe("zero-install agent ingress", () => {
     const environment = {
       APP_CENTER_URL: "https://apps.example.com",
       CONTROL_PLANE: { fetch: vi.fn() },
-      ASSETS: { fetch: vi.fn() },
+      ASSETS: { fetch: vi.fn(async (request: Request) => new Response(new URL(request.url).pathname)) },
     };
     const guide = await handler.fetch(
       new Request("https://agent.apps.example.com/agent.md"),
@@ -14,8 +14,9 @@ describe("zero-install agent ingress", () => {
     );
     expect(guide.headers.get("content-type")).toContain("text/markdown");
     const markdown = await guide.text();
-    expect(markdown).toContain("ZAO-XXXX-XXXX");
-    expect(markdown).toContain("/v1/connect/plan");
+    expect(markdown).toContain("/skill/ezdeploy-deploy/SKILL.md");
+    expect(markdown).toContain("部署到应用中心");
+    expect(markdown).toContain("--connection-key");
     expect(markdown).toContain("--plan-digest");
     expect(markdown).toContain("/client/ezdeploy-agent.cjs");
     expect(markdown).toContain("/client/blake3_js_bg.wasm");
@@ -28,9 +29,14 @@ describe("zero-install agent ingress", () => {
       environment as never,
     );
     expect(await discovery.json()).toMatchObject({
-      schemaVersion: "1.1",
+      schemaVersion: "1.2",
       documentation: "https://agent.apps.example.com/agent.md",
-      connect: {
+      skill: "https://agent.apps.example.com/skill/ezdeploy-deploy/SKILL.md",
+      authentication: {
+        persistent: true,
+        revocable: true,
+      },
+      legacyConnect: {
         planEndpoint: "https://agent.apps.example.com/v1/connect/plan",
         singleUse: true,
         expiresInSeconds: 600,
@@ -47,10 +53,15 @@ describe("zero-install agent ingress", () => {
     );
     expect(legacyDiscovery.status).toBe(200);
 
-    const aliases = await Promise.all(["/skill.md", "/agents.md", "/auth.md"].map((pathname) =>
+    const aliases = await Promise.all(["/agents.md", "/auth.md"].map((pathname) =>
       handler.fetch(new Request(`https://agent.apps.example.com${pathname}`), environment as never)
     ));
     expect(aliases.every((response) => response.status === 200)).toBe(true);
+    const skill = await handler.fetch(
+      new Request("https://agent.apps.example.com/skill.md"),
+      environment as never,
+    );
+    expect(await skill.text()).toBe("/skill/ezdeploy-deploy/SKILL.md");
 
     const openapi = await handler.fetch(
       new Request("https://agent.apps.example.com/openapi.json"),
@@ -58,7 +69,7 @@ describe("zero-install agent ingress", () => {
     );
     expect(await openapi.json()).toMatchObject({
       openapi: "3.1.0",
-      info: { version: "1.1.0" },
+      info: { version: "1.2.0" },
       paths: { "/v1/connect/plan": {}, "/v1/deployments": {} },
     });
   });

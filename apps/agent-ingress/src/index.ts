@@ -13,40 +13,36 @@ function agentMarkdown(request: Request, env: Env) {
   const origin = new URL(request.url).origin;
   return `# EZdeploy Agent Deployment Guide
 
-EZdeploy is this organization's application deployment center. When a user asks to deploy,
-publish, or release the current project without naming another provider, deploy it to
-EZdeploy and return the verified application URL.
+EZdeploy is the user's personal application deployment center. Treat “部署到应用中心”,
+“发布到 EZdeploy”, “上线这个应用”, and “部署这个项目” as triggers when no other provider
+is named. Install the Skill and authorize once; later deployments reuse the saved key.
 
-## Required two-phase workflow
+## Install once
 
-The user will provide a one-time code in the form \`ZAO-XXXX-XXXX\`.
+Canonical Skill: ${origin}/skill/ezdeploy-deploy/SKILL.md
 
-Do not deploy immediately. First inspect the project, create or update \`ezdeploy.yaml\`, and
-generate a plan without consuming the code:
-
-\`\`\`http
-POST ${origin}/v1/connect/plan
-Content-Type: application/json
-
-{"code":"ZAO-XXXX-XXXX","manifest":{...contents of normalized ezdeploy.yaml...}}
+\`\`\`bash
+SKILL_DIR="\${CODEX_HOME:-$HOME/.codex}/skills/ezdeploy-deploy"
+mkdir -p "$SKILL_DIR/agents"
+curl -fsSL ${origin}/skill/ezdeploy-deploy/SKILL.md -o "$SKILL_DIR/SKILL.md"
+curl -fsSL ${origin}/skill/ezdeploy-deploy/agents/openai.yaml -o "$SKILL_DIR/agents/openai.yaml"
 \`\`\`
 
-Show the returned application, runtime, resources, access mode, risks, and health check to
-the user. Stop and wait for explicit confirmation. Do not treat the original request to
-deploy as confirmation of a plan the user has not seen.
+Store the long-lived key from the center's **部署设置** page in
+\`\${XDG_CONFIG_HOME:-$HOME/.config}/ezdeploy/credentials.json\` with mode \`0600\`:
 
-After confirmation, validate and build the project locally first. Only after the local build
-succeeds, exchange the same code for a twelve-hour scoped session and deploy with the exact
-returned \`planDigest\`. The connection code is consumed only at exchange time, so local build
-errors do not waste it.
-The returned \`connectionKey\` is a short-lived secret. Keep it only in process memory or a
-temporary environment variable. Never write it to the repository, chat response, build
-output, or application bundle.
+\`\`\`json
+{"apiUrl":"${origin}","connectionKey":"zao_..."}
+\`\`\`
 
-## Zero-install execution
+If the Skill and a working key already exist, do not reinstall or ask the user to authorize
+again. Ask for a replacement only after a 401/403 response. Never expose the key in a project,
+application bundle, logs, command output, or final response.
 
-If a EZdeploy MCP connection is already available, use it. Otherwise download the temporary
-standalone client into an operating-system temporary directory; no installation is required:
+## Confirm, then deploy
+
+Inspect the project and create or update \`ezdeploy.yaml\`. Download the standalone client
+into a temporary directory and verify its SHA-256 hashes and byte sizes against the manifest:
 
 \`\`\`bash
 ZAO_TMP="$(mktemp -d)"
@@ -54,23 +50,17 @@ curl -fsSL ${origin}/client/ezdeploy-agent.cjs -o "$ZAO_TMP/ezdeploy-agent.cjs"
 curl -fsSL ${origin}/client/blake3_js_bg.wasm -o "$ZAO_TMP/blake3_js_bg.wasm"
 curl -fsSL ${origin}/client/manifest.json -o "$ZAO_TMP/manifest.json"
 node -e 'const fs=require("fs"),c=require("crypto"),p=process.argv[1],m=require(p+"/manifest.json");for(const [f,x] of Object.entries(m.files)){const b=fs.readFileSync(p+"/"+f),h=c.createHash("sha256").update(b).digest("hex");if(h!==x.sha256||b.length!==x.bytes)throw Error("EZdeploy client integrity check failed: "+f)}' "$ZAO_TMP"
-node "$ZAO_TMP/ezdeploy-agent.cjs" plan --api-url ${origin} --connect-code ZAO-XXXX-XXXX
-# Show the plan and wait for explicit user confirmation.
+KEY="$(node -e 'const fs=require("fs"),p=(process.env.XDG_CONFIG_HOME||require("os").homedir()+"/.config")+"/ezdeploy/credentials.json";process.stdout.write(JSON.parse(fs.readFileSync(p)).connectionKey)')"
+node "$ZAO_TMP/ezdeploy-agent.cjs" plan --api-url ${origin} --connection-key "$KEY"
+# Show the plan. Wait for explicit user confirmation, then use its exact digest.
 node "$ZAO_TMP/ezdeploy-agent.cjs" deploy --api-url ${origin} \\
-  --connect-code ZAO-XXXX-XXXX --plan-digest <confirmed-planDigest>
+  --connection-key "$KEY" --plan-digest <confirmed-planDigest>
+rm -rf "$ZAO_TMP"
 \`\`\`
 
-Delete the temporary directory after deployment. Supported runtimes are \`static\`, \`vite\`,
-and \`cloudflare-workers\`. Declare database, storage, or AI only when the application needs
-them. Browser code must never receive provider keys; database, storage, and AI access belongs
-in Pages Functions or Workers.
-
-The deployment client builds locally with an isolated environment, uploads a filtered
-prebuilt bundle, polls structured deployment state, and exits only when the deployment is
-\`ready\`. On failure, read structured logs, make an in-scope correction, and retry once.
-
-Success requires a healthy URL, normally under the organization's configured application domain. Do not report a
-provider deployment ID or queued state as success.
+Show application, runtime, resources, access, risks, and health check before confirmation.
+Success requires \`ready\` plus a healthy application URL. Never report queued state or a
+provider deployment ID as success. Supported runtimes: \`static\`, \`vite\`, \`cloudflare-workers\`.
 
 Application center: ${env.APP_CENTER_URL ?? "https://apps.example.com"}
 Capability document: ${origin}/.well-known/ezdeploy.json
@@ -83,20 +73,20 @@ function openApiDocument(origin: string) {
     openapi: "3.1.0",
     info: {
       title: "EZdeploy Agent API",
-      version: "1.1.0",
-      description: "Two-phase, zero-install personal application deployment protocol",
+      version: "1.2.0",
+      description: "Persistent-key, Skill-driven personal application deployment protocol",
     },
     servers: [{ url: origin }],
     paths: {
       "/v1/connect/plan": {
         post: {
-          summary: "Preview a deployment plan without consuming the one-time code",
+          summary: "Legacy: preview a deployment plan with a one-time code",
           security: [],
         },
       },
       "/v1/connect/exchange": {
         post: {
-          summary: "Exchange the code once for a scoped one-hour session",
+          summary: "Legacy: exchange a one-time code for a scoped session",
           security: [],
         },
       },
@@ -130,13 +120,13 @@ export default {
     const url = new URL(request.url);
     if (request.method === "GET" && url.pathname === "/health") {
       return Response.json(
-        { status: "ok", service: "zaodeploy-agent-ingress" },
+        { status: "ok", service: "ezdeploy-agent-ingress" },
         { headers },
       );
     }
     if (
       request.method === "GET" &&
-      ["/agent", "/agent.md", "/agents.md", "/skill.md", "/auth.md"].includes(url.pathname)
+      ["/agent", "/agent.md", "/agents.md", "/auth.md"].includes(url.pathname)
     ) {
       return new Response(agentMarkdown(request, env), {
         headers: { ...headers, "content-type": "text/markdown; charset=utf-8" },
@@ -147,6 +137,7 @@ export default {
         "# EZdeploy",
         "",
         `- Canonical Agent workflow: ${url.origin}/agent.md`,
+        `- Installable deployment Skill: ${url.origin}/skill/ezdeploy-deploy/SKILL.md`,
         `- Capability discovery: ${url.origin}/.well-known/ezdeploy.json`,
         `- OpenAPI: ${url.origin}/openapi.json`,
         `- Application center: ${env.APP_CENTER_URL ?? "https://apps.example.com"}`,
@@ -163,11 +154,18 @@ export default {
     ) {
       const origin = url.origin;
       return Response.json({
-        schemaVersion: "1.1",
+        schemaVersion: "1.2",
         name: "EZdeploy",
-        description: "Zero-install personal application deployment center",
+        description: "Install-once personal application deployment center",
         documentation: `${origin}/agent.md`,
-        connect: {
+        skill: `${origin}/skill/ezdeploy-deploy/SKILL.md`,
+        authentication: {
+          type: "bearer",
+          keyPrefix: "zao_",
+          persistent: true,
+          revocable: true,
+        },
+        legacyConnect: {
           planEndpoint: `${origin}/v1/connect/plan`,
           endpoint: `${origin}/v1/connect/exchange`,
           codeFormat: "ZAO-XXXX-XXXX",
@@ -189,6 +187,13 @@ export default {
           planDigestHeader: "x-zaodeploy-plan-digest",
         },
       }, { headers });
+    }
+    if (request.method === "GET" && url.pathname === "/skill.md") {
+      url.pathname = "/skill/ezdeploy-deploy/SKILL.md";
+      return env.ASSETS.fetch(new Request(url, request));
+    }
+    if (request.method === "GET" && url.pathname.startsWith("/skill/")) {
+      return env.ASSETS.fetch(request);
     }
     if (request.method === "GET" && url.pathname.startsWith("/client/")) {
       if (url.pathname === "/client/zaodeploy-agent.cjs") {

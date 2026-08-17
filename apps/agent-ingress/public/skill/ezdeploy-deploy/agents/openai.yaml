@@ -1,0 +1,4 @@
+interface:
+  display_name: "EZdeploy Deployment"
+  short_description: "Deploy projects to your personal EZdeploy application center"
+  default_prompt: "Use $ezdeploy-deploy to deploy this project to my application center."

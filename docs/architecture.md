@@ -5,10 +5,10 @@ EZdeploy separates intent, orchestration, and infrastructure execution.
 ```text
 Coding Agent
   -> public Agent discovery document
-  -> plan preview with unredeemed one-time code
-  -> explicit employee confirmation
+  -> installed deployment Skill + persistent revocable key
+  -> plan preview and explicit owner confirmation
   -> temporary client, direct HTTP, or optional Remote MCP
-  -> one-hour scoped EZdeploy session
+  -> authenticated EZdeploy request
   -> centralized Control Plane API (provider master keys)
   -> Deployment orchestrator
   -> Control-plane repository
@@ -22,8 +22,9 @@ Project build scripts execute in the employee-side Gateway with a minimal enviro
 
 The confirmed plan digest is calculated from the normalized manifest. The upload API rejects
 a missing digest or a bundle whose manifest no longer matches what the employee approved.
-Planning does not redeem the two-hour connection code; exchange is single-use and happens
-only after confirmation.
+The personal key remains valid until the owner revokes it. It is stored outside project
+directories and only its hash is retained by the control plane. Every deployment is still
+bound to the explicitly confirmed plan digest. Legacy one-time code exchange remains supported.
 
 ## Stable boundaries
 

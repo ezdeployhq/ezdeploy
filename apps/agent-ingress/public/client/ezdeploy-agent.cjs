@@ -19151,10 +19151,13 @@ function localBuildCommand(command) {
 // apps/mcp-server/src/cli.ts
 function usage() {
   process.stderr.write(`Usage:
-  node zaodeploy-agent.cjs plan --api-url <url> --connect-code <ZAO-XXXX-XXXX> [directory]
-  node zaodeploy-agent.cjs deploy --api-url <url> --connect-code <ZAO-XXXX-XXXX> --plan-digest <sha256> [directory]
+  node ezdeploy-agent.cjs plan --api-url <url> --connection-key <zao_...> [directory]
+  node ezdeploy-agent.cjs deploy --api-url <url> --connection-key <zao_...> --plan-digest <sha256> [directory]
+
+Legacy one-time codes remain supported with --connect-code <ZAO-XXXX-XXXX>.
 
 Options:
+  --connection-key <key> Persistent personal deployment key. Defaults to EZDEPLOY_CONNECTION_KEY.
   --environment <name>   Deployment environment (default: production)
   --plan-digest <sha256> Digest returned by plan after explicit user confirmation
   --json                 Emit machine-readable JSON (default)
@@ -19166,6 +19169,7 @@ function parseArguments(argv) {
   if (!["plan", "deploy"].includes(command ?? "")) usage();
   let apiUrl = "";
   let connectCode = "";
+  let connectionKey = process.env.EZDEPLOY_CONNECTION_KEY ?? process.env.ZAODEPLOY_CONNECTION_KEY ?? "";
   let environment = "production";
   let projectDirectory = process.cwd();
   let planDigest;
@@ -19173,24 +19177,29 @@ function parseArguments(argv) {
     const value = rest[index];
     if (value === "--api-url") apiUrl = rest[++index] ?? "";
     else if (value === "--connect-code") connectCode = rest[++index] ?? "";
+    else if (value === "--connection-key") connectionKey = rest[++index] ?? "";
     else if (value === "--environment") environment = rest[++index] ?? "";
     else if (value === "--plan-digest") planDigest = rest[++index] ?? "";
     else if (value === "--json") continue;
     else if (!value.startsWith("-")) projectDirectory = import_node_path12.default.resolve(value);
     else usage();
   }
-  if (!apiUrl || !/^ZAO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(connectCode) || !environment) usage();
+  const validCode = /^ZAO-[A-Z2-9]{4}-[A-Z2-9]{4}$/i.test(connectCode);
+  const validKey = /^zao_[A-Za-z0-9_-]{20,}$/.test(connectionKey);
+  if (!apiUrl || !validCode && !validKey || !environment) usage();
   if (command === "deploy" && !/^[a-f0-9]{64}$/.test(planDigest ?? "")) usage();
   return {
     command,
     apiUrl: apiUrl.replace(/\/$/, ""),
-    connectCode: connectCode.toUpperCase(),
+    ...validCode ? { connectCode: connectCode.toUpperCase() } : {},
+    ...validKey ? { connectionKey } : {},
     projectDirectory,
     environment,
     planDigest
   };
 }
 async function exchange(options) {
+  if (!options.connectCode) throw new Error("A one-time connection code is required for exchange");
   const response = await fetch(`${options.apiUrl}/v1/connect/exchange`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -19214,13 +19223,10 @@ async function main() {
   if (options.command === "plan") {
     const service2 = new RemoteDeploymentService({
       baseUrl: options.apiUrl,
-      token: "not-exchanged-during-plan-preview",
+      token: options.connectionKey ?? "not-exchanged-during-plan-preview",
       cloudBundle: true
     });
-    const plan = await service2.previewWithConnectCode(
-      options.projectDirectory,
-      options.connectCode
-    );
+    const plan = options.connectionKey ? await service2.plan(options.projectDirectory) : await service2.previewWithConnectCode(options.projectDirectory, options.connectCode);
     process.stdout.write(`${JSON.stringify(plan, null, 2)}
 `);
     return;
@@ -19228,10 +19234,10 @@ async function main() {
   let session;
   const service = new RemoteDeploymentService({
     baseUrl: options.apiUrl,
-    tokenProvider: async () => {
+    ...options.connectionKey ? { token: options.connectionKey } : { tokenProvider: async () => {
       session ??= await exchange(options);
       return session.connectionKey;
-    },
+    } },
     cloudBundle: true
   });
   const result = await service.deploy({

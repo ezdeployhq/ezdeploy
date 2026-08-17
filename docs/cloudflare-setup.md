@@ -10,9 +10,9 @@ EZdeploy production consists of four online Workers:
 - `ai-proxy`: OpenAI-compatible gateway issuing revocable per-application `zai_` keys.
 
 The owner does not need to preinstall a Gateway. The public Agent endpoint serves
-`/agent.md`, `/skill.md`, `/agents.md`, `/llms.txt`, `/openapi.json`, and
-`/.well-known/zaodeploy.json`; the application center issues a two-hour
-single-use connection code. A terminal-capable Agent downloads the standalone client and its
+`/agent.md`, `/skill/ezdeploy-deploy/SKILL.md`, `/agents.md`, `/llms.txt`, `/openapi.json`, and
+`/.well-known/ezdeploy.json`; the application center issues a long-lived, revocable personal
+deployment key and a one-time Skill installation prompt. A terminal-capable Agent downloads the standalone client and its
 BLAKE3 WebAssembly helper from the Agent endpoint into an operating-system temporary
 directory, while Remote MCP can be enabled as an optional enhanced path.
 No local EZdeploy server, SQLite database, Cloudflare account token, or model-provider key
