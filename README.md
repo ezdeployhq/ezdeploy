@@ -1,13 +1,17 @@
 # EZdeploy
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 [![CI](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml/badge.svg)](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 
-EZdeploy is an open-source, agent-native personal application deployment center. The owner copies one deployment prompt from the application center into a coding agent. The agent reads EZdeploy's public capability document, previews a deployment plan without consuming the single-use code, waits for explicit confirmation, exchanges the code for a short-lived scoped session, deploys the exact confirmed plan, verifies application health, and returns a live URL on the owner's domain.
+EZdeploy is an open-source, agent-native personal application deployment center. Install its deployment Skill once, save one revocable persistent key, and then tell Codex, WorkBuddy, or another coding agent to **“deploy to my app center.”** The agent analyzes the project, previews the exact deployment plan, waits for confirmation, publishes it to your Cloudflare account, verifies application health, and returns a live URL on your own domain.
+
+The application center includes English and Simplified Chinese interfaces. Open `/en` for English or use the language switch on any page; both languages share the same administrator account, applications, deployment keys, and AI provider configuration.
 
 ## Product boundary
 
-The first release targets static sites, Vite/React, and Cloudflare Workers. Cloudflare Pages/Workers is the intended runtime; D1, R2, organization access, and an OpenAI-compatible AI proxy are resource bindings.
+The first release targets static sites, Vite/React, and Cloudflare Workers. Cloudflare Pages/Workers is the intended runtime; D1, R2, optional protected access, and an OpenAI-compatible AI proxy are resource bindings.
 
 EZdeploy does not aim to become a general container platform, Kubernetes distribution, full CI/CD product, or database implementation.
 
@@ -75,6 +79,7 @@ The repository includes a deterministic mock for tests and a real Cloudflare ada
 - optional Cloudflare Access policies for protected applications;
 - immutable Pages artifacts, Worker version capture, and restoration;
 - a single-administrator application center plus MCP list, logs, rollback, and delete tools.
+- complete English and Simplified Chinese application-center routes with language-preserving navigation.
 
 The mock provider must not be presented as production. A production installation requires a Cloudflare account and deployment of the AI Proxy when AI bindings are used. Cloudflare Zero Trust is optional and only needed for protected application access.
 
@@ -101,7 +106,8 @@ The mock provider returns `.example.test` URLs and must be selected explicitly. 
 uses the online `@ezdeploy/cloud-control-plane`. The default owner flow requires no prior
 installation or MCP configuration on every project: the application center generates a
 long-lived, revocable personal deployment key plus an install prompt for the public
-EZdeploy Skill. After this one-time setup, phrases such as “部署到应用中心” trigger the
+EZdeploy Skill. After this one-time setup, phrases such as “deploy to my app center” or
+“部署到应用中心” trigger the
 workflow. Terminal-capable Agents download a versioned standalone client into an operating-system temporary directory;
 Remote MCP and an operator-published `@ezdeploy/agent` package remain optional enhanced
 distribution paths. No local
