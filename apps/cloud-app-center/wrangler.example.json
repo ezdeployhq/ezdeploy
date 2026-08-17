@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "ezdeploy-app-center",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-15",
+  "workers_dev": true,
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "ezdeploy-control",
+    "database_id": "YOUR_D1_DATABASE_ID"
+  }],
+  "vars": {
+    "CONTROL_PLANE_URL": "https://ezdeploy-control-plane.example.workers.dev",
+    "AGENT_GATEWAY_URL": "https://deploy.apps.example.com",
+    "AI_PROXY_URL": "https://ezdeploy-ai-proxy.example.workers.dev",
+    "ADMIN_EMAILS": "admin@example.com"
+  },
+  "routes": [{ "pattern": "apps.example.com", "custom_domain": true }],
+  "observability": { "enabled": true }
+}

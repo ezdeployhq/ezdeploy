@@ -1,0 +1,21 @@
+{
+  "name": "@ezdeploy/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@ezdeploy/contracts": "0.1.0",
+    "jsonc-parser": "^3.3.1",
+    "wrangler": "^4.111.0"
+  }
+}

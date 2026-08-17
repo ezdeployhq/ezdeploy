@@ -1,0 +1,4 @@
+interface:
+  display_name: "EZdeploy"
+  short_description: "Deploy internal web apps through EZdeploy agents"
+  default_prompt: "Use $zaodeploy to inspect and deploy this application, then return its verified URL."

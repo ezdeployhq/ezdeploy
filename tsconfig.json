@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/contracts" },
+    { "path": "./packages/core" },
+    { "path": "./apps/mcp-server" },
+    { "path": "./apps/ai-proxy" }
+    ,{ "path": "./apps/app-center" }
+    ,{ "path": "./apps/control-plane" }
+    ,{ "path": "./apps/cloud-control-plane" }
+    ,{ "path": "./apps/cloud-app-center" }
+    ,{ "path": "./apps/agent-ingress" }
+  ]
+}

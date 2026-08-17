@@ -1,0 +1,19 @@
+{
+  "name": "@ezdeploy/ai-proxy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260715.1"
+  }
+}

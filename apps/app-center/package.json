@@ -1,0 +1,15 @@
+{
+  "name": "@ezdeploy/app-center",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@ezdeploy/core": "0.1.0"
+  }
+}

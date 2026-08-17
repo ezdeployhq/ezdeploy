@@ -1,0 +1,23 @@
+apiVersion: ezdeploy.io/v1alpha1
+kind: Application
+metadata:
+  name: expense-assistant
+  displayName: Expense Assistant
+  description: Example internal AI application
+spec:
+  runtime: vite
+  buildCommand: npm run build
+  outputDirectory: dist
+  resources:
+    - kind: database
+      provider: cloudflare-d1
+    - kind: storage
+      provider: cloudflare-r2
+    - kind: ai
+      provider: zaodeploy-ai
+  access:
+    mode: organization
+    allowedGroups: []
+  healthCheck:
+    path: /
+    timeoutSeconds: 10

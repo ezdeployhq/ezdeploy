@@ -1,0 +1,17 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.db
+*.db-shm
+*.db-wal
+*.tsbuildinfo
+.zaodeploy/
+.wrangler/
+.env
+.env.*
+!.env.example
+
+# Local Cloudflare deployment configuration can contain account-specific IDs,
+# domains, emails, and service names. Commit the matching example files only.
+/apps/*/wrangler.json

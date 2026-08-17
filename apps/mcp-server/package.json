@@ -1,0 +1,33 @@
+{
+  "name": "@ezdeploy/agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zero-install temporary client and MCP gateway for EZdeploy",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "ezdeploy-agent": "./dist/cli.js",
+    "ezdeploy-mcp": "./dist/server.js",
+    "zaodeploy-agent": "./dist/cli.js",
+    "zaodeploy-mcp": "./dist/server.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b",
+    "start": "node dist/server.js",
+    "dev": "tsx src/server.ts",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@ezdeploy/contracts": "0.1.0",
+    "@ezdeploy/core": "0.1.0",
+    "blake3-wasm": "^2.1.5",
+    "tar": "^7.5.0",
+    "ws": "^8.18.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.0"
+  }
+}

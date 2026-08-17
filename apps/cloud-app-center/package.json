@@ -1,0 +1,8 @@
+{
+  "name": "@ezdeploy/cloud-app-center",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "tsc -b", "typecheck": "tsc -b --pretty false", "deploy": "wrangler deploy" },
+  "devDependencies": { "@cloudflare/workers-types": "^5.20260715.1" }
+}

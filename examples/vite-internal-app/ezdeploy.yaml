@@ -1,0 +1,23 @@
+apiVersion: ezdeploy.io/v1alpha1
+kind: Application
+metadata:
+  name: vite-internal-example
+  displayName: Vite Internal Example
+spec:
+  runtime: vite
+  buildCommand: npm run build
+  outputDirectory: dist
+  resources:
+    - kind: database
+      migrationsDirectory: migrations
+    - kind: storage
+    - kind: ai
+  access:
+    mode: organization
+  healthCheck:
+    path: /api/status
+    timeoutSeconds: 60
+    expectedJson:
+      database: true
+      storage: true
+      ai: true

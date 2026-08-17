@@ -1,0 +1,33 @@
+{
+  "name": "ezdeploy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent-native internal application delivery platform",
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "build:agent-client": "node scripts/build-agent-client.mjs",
+    "build:examples": "npm --workspaces --if-present run build --include-workspace-root=false",
+    "clean": "tsc -b --clean",
+    "test": "vitest run",
+    "preflight:cloudflare": "node scripts/cloudflare-preflight.mjs",
+    "smoke:cloudflare": "npm run build && node scripts/cloudflare-smoke.mjs",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}

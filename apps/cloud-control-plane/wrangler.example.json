@@ -1,0 +1,30 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "ezdeploy-control-plane",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "ezdeploy-control",
+    "database_id": "YOUR_D1_DATABASE_ID",
+    "migrations_dir": "migrations"
+  }],
+  "r2_buckets": [{ "binding": "SOURCES", "bucket_name": "ezdeploy-sources" }],
+  "workflows": [{
+    "name": "ezdeploy-deployments",
+    "binding": "DEPLOY_WORKFLOW",
+    "class_name": "DeploymentWorkflow"
+  }],
+  "vars": {
+    "CLOUDFLARE_ACCOUNT_ID": "YOUR_CLOUDFLARE_ACCOUNT_ID",
+    "CLOUDFLARE_ZONE_ID": "YOUR_CLOUDFLARE_ZONE_ID",
+    "AI_PROXY_URL": "https://ezdeploy-ai-proxy.example.workers.dev",
+    "ACCESS_GROUP_ID": "YOUR_ACCESS_GROUP_ID",
+    "ACCESS_SERVICE_TOKEN_ID": "YOUR_ACCESS_SERVICE_TOKEN_ID",
+    "EMPLOYEE_OWNER_ID": "enterprise-employee",
+    "APP_CENTER_URL": "https://apps.example.com",
+    "APPLICATION_DOMAIN_SUFFIX": "apps.example.com"
+  },
+  "observability": { "enabled": true }
+}

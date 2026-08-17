@@ -1,0 +1,13 @@
+apiVersion: ezdeploy.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflare-worker-example
+spec:
+  runtime: cloudflare-workers
+  resources:
+    - kind: database
+    - kind: storage
+  access:
+    mode: organization
+  healthCheck:
+    path: /

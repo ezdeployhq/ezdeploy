@@ -1,0 +1,9 @@
+apiVersion: ezdeploy.io/v1alpha1
+kind: Application
+metadata:
+  name: static-site-example
+spec:
+  runtime: static
+  outputDirectory: public
+  access:
+    mode: public

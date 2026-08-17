@@ -1,0 +1,15 @@
+{
+  "version": "0.1.0",
+  "protocolVersion": "1.1",
+  "runtime": "node>=22",
+  "files": {
+    "ezdeploy-agent.cjs": {
+      "sha256": "5035eeb05e3319c48bd0f6300237f59e525eb86e007e31b542fae5ded41e4b67",
+      "bytes": 672002
+    },
+    "blake3_js_bg.wasm": {
+      "sha256": "2dcc96fd2bd25392060d166e96cabbd2574cc1fedd32aa0233871c641c897c9f",
+      "bytes": 34405
+    }
+  }
+}
