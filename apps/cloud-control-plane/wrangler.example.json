@@ -24,7 +24,7 @@
     "ACCESS_GROUP_ID": "YOUR_ACCESS_GROUP_ID",
     "ACCESS_SERVICE_TOKEN_ID": "YOUR_ACCESS_SERVICE_TOKEN_ID",
     "EMPLOYEE_OWNER_ID": "personal-owner",
-    "APP_CENTER_URL": "https://apps.example.com",
+    "APP_CENTER_URL": "https://center.apps.example.com",
     "APPLICATION_DOMAIN_SUFFIX": "apps.example.com"
   },
   "observability": { "enabled": true }

@@ -25,13 +25,13 @@ Set `APP_CENTER_URL` to the application-center hostname and
 
 ```json
 {
-  "APP_CENTER_URL": "https://apps.example.com",
+  "APP_CENTER_URL": "https://center.apps.example.com",
   "APPLICATION_DOMAIN_SUFFIX": "apps.example.com",
   "CLOUDFLARE_ZONE_ID": "<target-zone-id>"
 }
 ```
 
-Attach `apps.example.com` as a Worker Custom Domain to `cloud-app-center`. Production
+Attach `center.apps.example.com` as a Worker Custom Domain to `cloud-app-center`. Production
 applications are then assigned exact Pages custom domains such as
 `expenses.apps.example.com`; non-production environments use
 `expenses-staging.apps.example.com`. Cloudflare Pages does not support wildcard custom

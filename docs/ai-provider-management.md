@@ -1,6 +1,6 @@
 # AI Provider 管理
 
-个人管理员通过 `https://apps.example.com/settings/ai` 管理模型供应商。应用不会直接
+个人管理员通过 `https://center.apps.example.com/settings/ai` 管理模型供应商。应用不会直接
 获得 DeepSeek、OpenAI 或其他供应商的主密钥；EZdeploy AI Proxy 为每个应用签发
 可撤销的 `zai_` 虚拟密钥。
 

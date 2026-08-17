@@ -10,6 +10,7 @@ import { applicationPage, authPage, landingPage } from "./ui.js";
 
 interface Env {
   DB: D1Database;
+  AI_PROXY?: Fetcher;
   CONTROL_PLANE_URL: string;
   AGENT_GATEWAY_URL: string;
   AI_PROXY_URL: string;
@@ -123,11 +124,14 @@ function json(value: unknown, status = 200) {
 async function proxyAiAdmin(request: Request, env: Env, upstreamPath: string): Promise<Response> {
   const headers = new Headers({ authorization: `Bearer ${env.AI_ADMIN_TOKEN}` });
   if (request.headers.get("content-type")) headers.set("content-type", request.headers.get("content-type")!);
-  const response = await fetch(`${env.AI_PROXY_URL}${upstreamPath}`, {
+  const init: RequestInit = {
     method: request.method,
     headers,
     body: ["GET", "HEAD"].includes(request.method) ? undefined : await request.arrayBuffer(),
-  });
+  };
+  const response = env.AI_PROXY
+    ? await env.AI_PROXY.fetch(new Request(`https://ai-proxy.internal${upstreamPath}`, init))
+    : await fetch(`${env.AI_PROXY_URL}${upstreamPath}`, init);
   return new Response(response.body, {
     status: response.status,
     headers: { ...responseHeaders, "content-type": response.headers.get("content-type") ?? "application/json" },

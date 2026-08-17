@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-15",
   "workers_dev": true,
+  "services": [{ "binding": "AI_PROXY", "service": "ezdeploy-ai-proxy" }],
   "d1_databases": [{
     "binding": "DB",
     "database_name": "ezdeploy-control",
@@ -15,6 +16,6 @@
     "AI_PROXY_URL": "https://ezdeploy-ai-proxy.example.workers.dev",
     "OWNER_ID": "personal-owner"
   },
-  "routes": [{ "pattern": "apps.example.com", "custom_domain": true }],
+  "routes": [{ "pattern": "center.apps.example.com", "custom_domain": true }],
   "observability": { "enabled": true }
 }

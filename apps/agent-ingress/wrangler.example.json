@@ -8,7 +8,7 @@
     "service": "ezdeploy-control-plane"
   }],
   "vars": {
-    "APP_CENTER_URL": "https://apps.example.com"
+    "APP_CENTER_URL": "https://center.apps.example.com"
   },
   "assets": {
     "directory": "./public",
