@@ -47,7 +47,7 @@ const legacyPage = `<!doctype html>
 <body>
 <div class="layout">
   <aside class="sidebar">
-    <div class="brand"><span>Zao</span>Deploy</div>
+    <div class="brand"><span>EZ</span>deploy</div>
     <nav>
       <button class="nav active" data-view="catalog" data-short="应用">企业应用</button>
       <button class="nav" data-view="connect" data-short="部署">让 AI 帮你部署</button>

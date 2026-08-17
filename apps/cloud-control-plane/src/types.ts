@@ -38,6 +38,7 @@ export interface Environment {
   AI_CONTROL_TOKEN: string;
   CONTROL_PLANE_TOKEN: string;
   EMPLOYEE_OWNER_ID: string;
+  ACCESS_ENABLED?: string;
   ACCESS_GROUP_ID: string;
   ACCESS_SERVICE_TOKEN_ID: string;
   ACCESS_CLIENT_ID: string;

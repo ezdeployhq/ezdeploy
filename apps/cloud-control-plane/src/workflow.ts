@@ -45,6 +45,10 @@ export class DeploymentWorkflow extends WorkflowEntrypoint<Environment, { deploy
         await setStatus(this.env, id, "deploying", "Publishing prebuilt bundle to Cloudflare Pages");
         return deployPages(this.env, projectName, String(context.environment_name), bundle, provisioned, issuedAiSecret);
       });
+      // Pages publishing can consume most of the per-invocation subrequest budget
+      // while it uploads assets and polls the deployment. Yield the Workflow here
+      // so domain, Access, and health-check requests run in a fresh invocation.
+      await step.sleep("yield-after-pages-publish", "1 second");
       if (deployed.customHostname) {
         let domainActive = false;
         for (let attempt = 0; attempt < 24; attempt++) {

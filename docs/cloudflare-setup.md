@@ -43,9 +43,20 @@ deployment ready or fall back to `pages.dev` until the exact enterprise hostname
 
 ## Cloudflare resources
 
-Use one Cloudflare account with permissions for Pages, Workers Scripts, D1, R2, Workflows,
-AI Gateway Run, Workers AI, and Access Apps/Policies. Configure a Zero Trust identity provider,
-an employee Access group, and one service token used by deployment automation and health checks.
+Use one Cloudflare account. For the runtime API token, grant the account-scoped permissions
+`D1 Write`, `Pages Write`, `Workers R2 Storage Write`, and `Workers AI Read`. Add `DNS Write`
+for the application zone when exact enterprise domains are enabled. Add `Access: Apps and
+Policies Write` only when `ACCESS_ENABLED=true`; Wrangler's interactive login deploys the
+EZdeploy Workers and Workflow separately.
+
+R2 includes a free usage allowance, but a new Cloudflare account still requires R2 subscription
+activation (and may request a payment method) before the first bucket can be created. Activating
+R2 does not itself create usage charges; usage above Cloudflare's current free allowance is billed.
+Complete this one-time activation before running `wrangler r2 bucket create`.
+
+For organization-only applications, also configure a Zero Trust identity provider, an employee
+Access group, and one service token used by deployment automation and health checks. A first
+installation can start in public-only mode and add Access later.
 
 Create shared storage and deploy:
 
@@ -75,6 +86,11 @@ Protect these hostnames with Cloudflare Access:
 - the control-plane Worker: employee group plus service-token automation policy;
 - the application-center Worker: employee group, optionally service-token smoke policy;
 - each organization application: employee group plus service-token health policy.
+
+Set `ACCESS_ENABLED` to `"true"` only after the Access group and service token are configured.
+Leave it as `"false"` for an initial public-only installation. Public deployments then require no
+Access API permission; an application requesting `organization` access fails with an explicit
+configuration error instead of being published without protection.
 
 ## Codex, WorkBuddy, and other coding Agents
 

@@ -200,18 +200,7 @@ export async function deployPages(
   const upload = await api<{ jwt: string }>(env, `${projectPath}/upload-token`);
   if (!upload?.jwt) throw new Error("Pages upload token missing");
   await uploadAssets(upload.jwt, bundle.assets);
-  const manifest = Object.fromEntries(bundle.assets.map((item) => [item.path, item.hash]));
-  const form = new FormData();
-  form.set("manifest", JSON.stringify(manifest));
-  form.set("branch", branch);
-  form.set("commit_dirty", "true");
-  form.set("commit_message", "Deployed by EZdeploy online control plane");
-  if (bundle.headers) form.set("_headers", new File([bundle.headers], "_headers"));
-  if (bundle.redirects) form.set("_redirects", new File([bundle.redirects], "_redirects"));
-  if (bundle.routes) form.set("_routes.json", new File([bundle.routes], "_routes.json", { type: "application/json" }));
-  if (bundle.workerScript) {
-    form.set("_worker.bundle", new File([bundle.workerScript], "_worker.bundle"));
-  }
+  const form = pagesDeploymentForm(branch, bundle);
   const deployment = await api<{ id: string; url: string }>(env, `${projectPath}/deployments`, { method: "POST", body: form });
   if (!deployment) throw new Error("Pages deployment returned no result");
   await waitForPagesDeployment(env, projectPath, deployment.id);
@@ -229,6 +218,32 @@ export async function deployPages(
     customHostname,
     projectPath,
   };
+}
+
+export function pagesDeploymentForm(branch: string, bundle: DeploymentBundle): FormData {
+  const assetManifest = Object.fromEntries(bundle.assets.map((item) => [item.path, item.hash]));
+  const form = new FormData();
+  form.set("manifest", JSON.stringify(assetManifest));
+  form.set("branch", branch);
+  form.set("commit_dirty", "true");
+  form.set("commit_message", "Deployed by EZdeploy online control plane");
+  if (bundle.headers) form.set("_headers", new File([bundle.headers], "_headers"));
+  if (bundle.redirects) form.set("_redirects", new File([bundle.redirects], "_redirects"));
+  if (bundle.routes) form.set("_routes.json", new File([bundle.routes], "_routes.json", { type: "application/json" }));
+  if (bundle.workerScript) {
+    const multipart = /^--([^\r\n]+)\r?\n/.exec(bundle.workerScript);
+    if (multipart) {
+      // `wrangler pages functions build` emits a nested multipart module bundle.
+      // Cloudflare needs its inner boundary in the file part's Content-Type;
+      // without it the API accepts the deployment but silently omits Functions.
+      form.set("_worker.bundle", new File([bundle.workerScript], "_worker.bundle", {
+        type: `multipart/form-data; boundary=${multipart[1]}`,
+      }));
+    } else {
+      form.set("_worker.js", new File([bundle.workerScript], "_worker.js", { type: "application/javascript+module" }));
+    }
+  }
+  return form;
 }
 
 function applicationHostname(
@@ -377,6 +392,13 @@ export async function applyAccess(
   stableUrl: string,
   ownerId?: string,
 ) {
+  const accessEnabled = env.ACCESS_ENABLED?.trim().toLowerCase() === "true";
+  if (!accessEnabled) {
+    if (manifest.spec.access.mode === "organization") {
+      throw new Error("Organization access requires ACCESS_ENABLED=true and Cloudflare Access configuration");
+    }
+    return;
+  }
   const name = `zaodeploy-${manifest.metadata.name}-${branch}`;
   const apps = await api<Array<{ id: string; name: string }>>(env, `/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/access/apps`) ?? [];
   const existing = apps.find((item) => item.name === name);
