@@ -23,6 +23,22 @@ infrastructure and security review. The source repository is
 [jingchang0623-crypto/ezdeploy](https://github.com/jingchang0623-crypto/ezdeploy). See [CONTRIBUTING.md](./CONTRIBUTING.md),
 [SECURITY.md](./SECURITY.md), and the [release checklist](./docs/open-source-release.md).
 
+## Quick install
+
+One Cloudflare account is the only infrastructure requirement. New accounts must
+activate R2 once in the Cloudflare dashboard before the first bucket can be created;
+activation may request a payment method, but usage within the current free allowance
+is not billed.
+
+    npm install
+    npx wrangler login
+    npm run setup:cloudflare
+
+The script provisions D1 and R2, writes the Worker configuration, deploys all four
+Workers, uploads generated secrets, and prints your application-center URL. See
+[docs/cloudflare-setup.md](./docs/cloudflare-setup.md) for token permissions,
+non-interactive flags, and the equivalent manual steps.
+
 ## Deployment contract
 
 Every deployment follows the same observable workflow:

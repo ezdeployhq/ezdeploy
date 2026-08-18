@@ -19,6 +19,16 @@ EZdeploy 不计划成为通用容器平台、Kubernetes 发行版、完整 CI/CD
 
 EZdeploy 正在为首个公开的 `0.1.0` 版本做准备，并采用 Apache-2.0 许可证。核心部署流程已经实现并通过测试；Cloudflare 安装仍需要使用部署者自己的基础设施，并完成安全审查。源码仓库位于 [jingchang0623-crypto/ezdeploy](https://github.com/jingchang0623-crypto/ezdeploy)。另请参阅 [CONTRIBUTING.md](./CONTRIBUTING.md)、[SECURITY.md](./SECURITY.md) 和[发布检查清单](./docs/open-source-release.md)。
 
+## 快速安装
+
+唯一的基础设施要求是一个 Cloudflare 账号。新账号需要先在 Cloudflare 控制台激活一次 R2（可能会要求绑定支付方式；只要用量在当前免费额度内就不会产生费用）。
+
+    npm install
+    npx wrangler login
+    npm run setup:cloudflare
+
+脚本会自动准备 D1 和 R2、生成 Worker 配置、部署全部四个 Worker、写入生成的密钥，并输出你的应用中心地址。API 令牌权限要求、非交互参数和等价的手动步骤见 [docs/cloudflare-setup.md](./docs/cloudflare-setup.md)。
+
 ## 部署契约
 
 每次部署都遵循同一套可观察流程：

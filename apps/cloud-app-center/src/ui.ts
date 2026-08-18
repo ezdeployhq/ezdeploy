@@ -191,7 +191,7 @@ const zhApplicationPage = `<!doctype html>
 <body>
   <header class="topbar"><div class="topbar-inner">
     <a class="brand" href="/"><i>EZ</i>deploy</a>
-    <nav class="nav"><a data-path="/center" data-short="应用" href="/center">我的应用</a><a data-path="/deploy" data-short="部署" href="/deploy">部署设置</a><a data-path="/settings/ai" data-short="AI" href="/settings/ai">AI 设置</a></nav>
+    <nav class="nav"><a data-path="/center" data-short="应用" href="/center">我的应用</a><a data-path="/deploy" data-short="部署" href="/deploy">部署设置</a><a data-path="/settings/ai" data-short="AI" href="/settings/ai">AI 设置</a><a data-path="/activity" data-short="动态" href="/activity">事件用量</a></nav>
     <div class="account"><a class="logout" id="localeSwitch" href="/en/center" lang="en">EN</a><div class="identity" id="identity">正在验证身份…</div><button class="logout" id="logout" type="button">退出</button></div>
   </div></header>
   <main>
@@ -214,6 +214,13 @@ const zhApplicationPage = `<!doctype html>
         <aside class="provider-summary"><h2>默认模型路由</h2><p>所有请求中的 <code>default-chat</code> 会路由到当前默认 Provider。Embedding 暂时继续使用 Cloudflare Workers AI。</p><div class="route-line"><div class="route-label">CHAT COMPLETIONS</div><div class="route-value" id="defaultRoute">未配置，使用 Cloudflare 默认模型</div></div><div class="route-line"><div class="route-label">密钥安全</div><div class="route-value">AES-256-GCM 加密 · 永不回显完整密钥</div></div></aside>
       </div>
     </section>
+    <section class="view" id="activity">
+      <div class="page-head"><div><p class="eyebrow">ACTIVITY</p><h1>事件与用量</h1><p>最近的部署事件和 AI 用量汇总，用于排查失败原因并掌握成本。</p></div></div>
+      <div class="provider-layout">
+        <div class="provider-list" id="eventList"><div class="empty loading">正在读取事件…</div></div>
+        <aside class="provider-summary"><h2>AI 用量（近 30 天）</h2><p>按天聚合的请求与 token 统计。每个应用的每分钟限额和每日预算由 AI Proxy 强制执行。</p><div class="route-line"><div class="route-label">今日请求</div><div class="route-value" id="usageToday">–</div></div><div class="route-line"><div class="route-label">今日 TOKENS</div><div class="route-value" id="usageTokensToday">–</div></div><div class="route-line"><div class="route-label">近 30 天请求</div><div class="route-value" id="usageMonth">–</div></div><div class="route-line"><div class="route-label">按模型</div><div id="usageModels"></div></div></aside>
+      </div>
+    </section>
   </main>
   <button class="primary mobile-create" id="mobileCreate">生成长期 Key</button>
   <dialog id="keyDialog"><div class="modal"><h2>长期部署 Key 已生成</h2><p>它只显示这一次。复制整段安装提示词给 Agent，之后直接说“部署到应用中心”即可。</p><div class="key"><code id="keyValue"></code><button class="copy" data-copy="keyValue">复制 Key</button></div><textarea class="prompt" id="agentPrompt" readonly></textarea><div class="modal-actions"><button class="secondary" id="done">关闭</button><button class="primary" data-copy="agentPrompt">复制安装提示词</button></div></div></dialog>
@@ -222,7 +229,7 @@ const zhApplicationPage = `<!doctype html>
     const state={apps:[],me:null,providers:[]};
     async function apiData(response){const text=await response.text();if(!text)return {};try{return JSON.parse(text)}catch{return {error:{message:'服务暂不可用（HTTP '+response.status+'）'}}}}
     const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const current=location.pathname==='/deploy'?'deploy':location.pathname==='/settings/ai'?'providers':'catalog';
+    const current=location.pathname==='/deploy'?'deploy':location.pathname==='/settings/ai'?'providers':location.pathname==='/activity'?'activity':'catalog';
     document.querySelector('#'+current).classList.add('active');
     document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('active',a.dataset.path===location.pathname));
     document.querySelector('#localeSwitch').href=location.pathname.startsWith('/en/')?location.pathname.slice(3):'/en'+location.pathname;
@@ -230,7 +237,7 @@ const zhApplicationPage = `<!doctype html>
     function initials(name){return String(name||'ZA').trim().split(/\\s+/).slice(0,2).map(x=>x[0]).join('').toUpperCase().slice(0,2)}
     async function loadMe(){const r=await fetch('/api/me');if(r.status===401){location.href='/login';return}if(!r.ok)throw Error('身份验证失败');state.me=await r.json();document.querySelector('#identity').textContent=state.me.username}
     async function loadApps(){const r=await fetch('/api/apps');if(!r.ok)throw Error('应用目录加载失败');state.apps=await r.json();drawApps()}
-    function drawApps(){const q=(document.querySelector('#search')?.value||'').toLowerCase();const rows=state.apps.filter(x=>JSON.stringify(x).toLowerCase().includes(q));document.querySelector('#count').textContent=rows.length+' 个应用';document.querySelector('#apps').innerHTML=rows.length?rows.map((x,i)=>{const url=x.deployment?.url||'#';const status=x.deployment?.status||'未发布';const preview=x.deployment?.url?'<iframe src="'+esc(encodeURI(x.deployment.url))+'" title="'+esc(x.application.displayName)+' 页面预览" loading="lazy" tabindex="-1" aria-hidden="true"></iframe>':'';return '<a class="app" href="'+encodeURI(url)+'" target="_blank" rel="noreferrer"><div class="app-preview"><div class="preview-fallback"><div class="app-icon">'+esc(initials(x.application.displayName))+'</div></div>'+preview+'</div><div class="app-body"><h2>'+esc(x.application.displayName)+'</h2><div class="description">'+esc(x.application.description||x.application.slug)+'</div><div class="app-foot"><div class="status-line"><span class="status">'+esc(status)+'</span></div><div class="caps">'+x.resources.map(r=>'<span class="cap">'+esc(({database:'数据库',storage:'对象存储',ai:'AI'}[r.kind]||r.kind))+'</span>').join('')+(x.access?.mode==='organization'?'<span class="cap">受保护访问</span>':'<span class="cap">公开访问</span>')+'</div></div></div></a>'}).join(''):'<div class="empty">还没有应用。安装部署 Skill 后，对 Agent 说“部署到应用中心”吧。</div>'}
+    function drawApps(){const q=(document.querySelector('#search')?.value||'').toLowerCase();const rows=state.apps.filter(x=>JSON.stringify(x).toLowerCase().includes(q));document.querySelector('#count').textContent=rows.length+' 个应用';document.querySelector('#apps').innerHTML=rows.length?rows.map((x,i)=>{const url=x.deployment?.url||'#';const status=x.deployment?.status||'未发布';const previewAttr=x.deployment?.url&&x.access?.mode!=='organization'?' data-preview-url="'+esc(encodeURI(x.deployment.url))+'"':'';return '<a class="app" href="'+encodeURI(url)+'"'+previewAttr+' target="_blank" rel="noreferrer"><div class="app-preview"><div class="preview-fallback"><div class="app-icon">'+esc(initials(x.application.displayName))+'</div></div></div><div class="app-body"><h2>'+esc(x.application.displayName)+'</h2><div class="description">'+esc(x.application.description||x.application.slug)+'</div><div class="app-foot"><div class="status-line"><span class="status">'+esc(status)+'</span></div><div class="caps">'+x.resources.map(r=>'<span class="cap">'+esc(({database:'数据库',storage:'对象存储',ai:'AI'}[r.kind]||r.kind))+'</span>').join('')+(x.access?.mode==='organization'?'<span class="cap">受保护访问</span>':'<span class="cap">公开访问</span>')+'</div></div></div></a>'}).join(''):'<div class="empty">还没有应用。安装部署 Skill 后，对 Agent 说“部署到应用中心”吧。</div>'}
     async function loadConnections(){const r=await fetch('/api/connections');if(!r.ok)throw Error('连接读取失败');const rows=await r.json();document.querySelector('#connections').innerHTML=rows.length?rows.map(x=>'<div class="connection"><div class="connection-head"><strong>'+esc(x.label||'部署连接')+'</strong><button onclick="revokeConnection(\\''+x.id+'\\')">撤销</button></div><div class="small">'+(x.kind==='persistent'?'长期有效':'临时连接')+' · 创建于 '+new Date(x.createdAt).toLocaleString()+'</div><div class="small">'+(x.expiresAt?'有效至 '+new Date(x.expiresAt).toLocaleString():(x.lastUsedAt?'最近使用 '+new Date(x.lastUsedAt).toLocaleString():'尚未使用'))+'</div></div>').join(''):'<div class="empty" style="padding:35px 0">暂无部署连接</div>'}
     const providerPresets={
       deepseek:{name:'DeepSeek',baseUrl:'https://api.deepseek.com',model:'deepseek-v4-flash',models:['deepseek-v4-flash','deepseek-v4-pro']},
@@ -254,13 +261,29 @@ const zhApplicationPage = `<!doctype html>
     async function deleteProvider(id){if(!confirm('删除后，使用这个 Provider 的请求会立即切换到其他默认配置。继续吗？'))return;const r=await fetch('/api/ai/providers/'+id,{method:'DELETE'});if(!r.ok){const data=await apiData(r);return alert(data.error?.message||'删除失败')}await loadProviders()}window.deleteProvider=deleteProvider;
     document.querySelector('#providerForm').onsubmit=async event=>{event.preventDefault();const id=document.querySelector('#providerId').value;const body={providerType:providerType.value,name:document.querySelector('#providerName').value,baseUrl:document.querySelector('#providerBaseUrl').value,apiKey:document.querySelector('#providerApiKey').value,defaultModel:document.querySelector('#providerDefaultModel').value,models:document.querySelector('#providerModels').value.split(',').map(x=>x.trim()).filter(Boolean),enabled:document.querySelector('#providerEnabled').checked,isDefault:document.querySelector('#providerDefault').checked};const r=await fetch('/api/ai/providers'+(id?'/'+id:''),{method:id?'PUT':'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const data=await apiData(r);if(!r.ok){document.querySelector('#providerError').textContent=data.error?.message||'保存失败';return}document.querySelector('#providerDialog').close();await loadProviders()};
     document.querySelector('#search')?.addEventListener('input',drawApps);
+    document.querySelector('#apps').addEventListener('mouseover',event=>{const card=event.target.closest('.app[data-preview-url]');if(!card||card.dataset.previewLoaded)return;card.dataset.previewLoaded='1';const frame=document.createElement('iframe');frame.src=card.dataset.previewUrl;frame.loading='lazy';frame.tabIndex=-1;frame.setAttribute('aria-hidden','true');card.querySelector('.app-preview').appendChild(frame)});
     async function createPrompt(){const r=await fetch('/api/connections',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({label:'Codex / WorkBuddy · 长期部署',locale:'zh'})});const data=await r.json();if(!r.ok)return alert(data.error?.message||'创建失败');document.querySelector('#keyValue').textContent=data.connectionKey;document.querySelector('#agentPrompt').value=data.agentPrompt;document.querySelector('#keyDialog').showModal();await loadConnections()}
     document.querySelector('#create')?.addEventListener('click',createPrompt);document.querySelector('#mobileCreate').addEventListener('click',createPrompt);
     async function revokeConnection(id){if(!confirm('撤销后，这个 Agent 会话将立即失效。继续吗？'))return;await fetch('/api/connections/'+id,{method:'DELETE'});await loadConnections()}window.revokeConnection=revokeConnection;
     document.querySelectorAll('[data-copy]').forEach(button=>button.onclick=async()=>{const target=document.querySelector('#'+button.dataset.copy);await navigator.clipboard.writeText(target.value??target.textContent);const old=button.textContent;button.textContent='已复制';setTimeout(()=>button.textContent=old,1200)});
     document.querySelector('#done').onclick=()=>document.querySelector('#keyDialog').close();
     document.querySelector('#logout').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST'});location.href='/login'};
-    const jobs=[loadMe()];if(current==='catalog')jobs.push(loadApps());else if(current==='deploy')jobs.push(loadConnections());else jobs.push(loadProviders());Promise.all(jobs).catch(error=>{const target=document.querySelector(current==='catalog'?'#apps':current==='deploy'?'#connections':'#providerList');target.innerHTML='<div class="empty">加载失败：'+esc(error.message)+'</div>'});
+    function formatTokens(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(n)}
+    async function loadActivity(){
+      const [eventsResponse,usageResponse]=await Promise.all([fetch('/api/events'),fetch('/api/ai-usage')]);
+      if(!eventsResponse.ok)throw Error('事件读取失败');
+      const events=await eventsResponse.json();
+      const usage=await usageResponse.json().catch(()=>({days:[],models:[]}));
+      document.querySelector('#eventList').innerHTML=events.length?events.map(x=>'<div class="provider-row"><div class="provider-mark"'+((x.status==='failed'||x.status==='unhealthy')?' style="background:#b72f25;color:#fff"':'')+'>'+esc(String(x.status||'?').slice(0,2).toUpperCase())+'</div><div><h2>'+esc(x.application||'系统')+' · '+esc(x.status)+'</h2><div class="provider-meta"><span>'+esc(x.message||'')+'</span></div><div class="small">'+new Date(x.createdAt).toLocaleString()+'</div></div></div>').join(''):'<div class="empty">暂无事件</div>';
+      const days=usage.days||[];const today=new Date().toISOString().slice(0,10);
+      const total=(key)=>days.reduce((sum,row)=>sum+Number(row[key]||0),0);
+      const todayRow=days.find(row=>row.day===today);
+      document.querySelector('#usageToday').textContent=String(Number(todayRow?.requests||0));
+      document.querySelector('#usageTokensToday').textContent=formatTokens(Number(todayRow?.input_tokens||0)+Number(todayRow?.output_tokens||0));
+      document.querySelector('#usageMonth').textContent=String(total('requests'))+' · '+formatTokens(total('input_tokens')+total('output_tokens'))+' tokens';
+      document.querySelector('#usageModels').innerHTML=(usage.models||[]).length?usage.models.map(row=>'<div class="route-value" style="font-weight:500">'+esc(row.model_alias)+' · '+Number(row.requests||0)+' · '+formatTokens(Number(row.input_tokens||0)+Number(row.output_tokens||0))+'</div>').join(''):'<div class="route-value" style="font-weight:500">暂无用量</div>';
+    }
+    const jobs=[loadMe()];if(current==='catalog')jobs.push(loadApps());else if(current==='deploy')jobs.push(loadConnections());else if(current==='activity')jobs.push(loadActivity());else jobs.push(loadProviders());Promise.all(jobs).catch(error=>{const target=document.querySelector(current==='catalog'?'#apps':current==='deploy'?'#connections':current==='activity'?'#eventList':'#providerList');target.innerHTML='<div class="empty">加载失败：'+esc(error.message)+'</div>'});
   </script>
 </body></html>`;
 
@@ -280,6 +303,14 @@ const authEnglishTranslations: Array<[string, string]> = [
 ];
 
 const applicationEnglishTranslations: Array<[string, string]> = [
+  ["最近的部署事件和 AI 用量汇总，用于排查失败原因并掌握成本。", "Recent deployment events and aggregated AI usage, for troubleshooting and cost awareness."],
+  ["按天聚合的请求与 token 统计。每个应用的每分钟限额和每日预算由 AI Proxy 强制执行。", "Requests and tokens aggregated by day. Per-app per-minute limits and daily budgets are enforced by the AI Proxy."],
+  ["AI 用量（近 30 天）", "AI usage (last 30 days)"],
+  ["正在读取事件…", "Loading events…"], ["事件读取失败", "Could not load events"],
+  ["事件与用量", "Activity"], ["事件用量", "Activity"], ["今日请求", "Requests today"], ["今日 TOKENS", "Tokens today"],
+  ["近 30 天请求", "Requests (30 days)"], ["按模型", "By model"],
+  ["暂无事件", "No events yet"], ["暂无用量", "No usage yet"], ["系统", "System"],
+  ["data-short=\"动态\"", "data-short=\"Activity\""],
   ["配置一次 Skill 和长期 Key，以后直接对 Agent 说“部署到应用中心”。", "Configure the Skill and a persistent key once, then simply tell your agent to “deploy to my app center”."],
   ["长期 Key 只能用于你的部署中心。不要把它写入项目、构建产物或聊天回复；如有泄露，可在右侧立即撤销。", "This persistent key only works with your deployment center. Keep it out of projects, build output, and chat replies; revoke it here immediately if exposed."],
   ["它只显示这一次。复制整段安装提示词给 Agent，之后直接说“部署到应用中心”即可。", "It is shown only once. Give the full setup prompt to your agent; afterward, just say “deploy to my app center”."],
@@ -335,9 +366,10 @@ export function applicationPageFor(locale: "zh" | "en" = "zh"): string {
     .replaceAll('href="/center"', 'href="/en/center"')
     .replaceAll('href="/deploy"', 'href="/en/deploy"')
     .replaceAll('href="/settings/ai"', 'href="/en/settings/ai"')
+    .replaceAll('href="/activity"', 'href="/en/activity"')
     .replace('href="/en/center" lang="en">EN</a>', 'href="/center" lang="zh-CN">中文</a>')
     .replace('<a class="brand" href="/">', '<a class="brand" href="/en">')
-    .replace('const current=location.pathname===\'/deploy\'?\'deploy\':location.pathname===\'/settings/ai\'?\'providers\':\'catalog\';', "const current=location.pathname==='/en/deploy'?'deploy':location.pathname==='/en/settings/ai'?'providers':'catalog';")
+    .replace('const current=location.pathname===\'/deploy\'?\'deploy\':location.pathname===\'/settings/ai\'?\'providers\':location.pathname===\'/activity\'?\'activity\':\'catalog\';', "const current=location.pathname==='/en/deploy'?'deploy':location.pathname==='/en/settings/ai'?'providers':location.pathname==='/en/activity'?'activity':'catalog';")
     .replace("location.href='/login'", "location.href='/en/login'")
     .replace("location.href='/login'", "location.href='/en/login'")
     .replace("locale:'zh'", "locale:'en'");

@@ -151,9 +151,15 @@ export async function provisionResource(
     await api(env, `/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/r2/buckets`, { method: "POST", body: JSON.stringify({ name }) });
     return { externalId: name, configuration: { binding: "STORAGE", bucketName: name } };
   }
+  const dailyBudget = Number(env.AI_DAILY_REQUEST_BUDGET ?? "");
   const response = await fetch(`${env.AI_PROXY_URL}/admin/v1/credentials`, {
     method: "POST", headers: { authorization: `Bearer ${env.AI_CONTROL_TOKEN}`, "content-type": "application/json" },
-    body: JSON.stringify({ appId: applicationId, allowedModels: ["default-chat"], requestsPerMinute: 60 }),
+    body: JSON.stringify({
+      appId: applicationId,
+      allowedModels: ["default-chat"],
+      requestsPerMinute: 60,
+      ...(Number.isFinite(dailyBudget) && dailyBudget > 0 ? { dailyRequestBudget: Math.floor(dailyBudget) } : {}),
+    }),
   });
   if (!response.ok) throw new Error(`AI credential creation failed with HTTP ${response.status}`);
   const issued = await response.json<{ credentialId: string; virtualKey: string }>();

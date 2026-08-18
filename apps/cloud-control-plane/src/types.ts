@@ -36,6 +36,7 @@ export interface Environment {
   CLOUDFLARE_API_TOKEN: string;
   AI_PROXY_URL: string;
   AI_CONTROL_TOKEN: string;
+  AI_DAILY_REQUEST_BUDGET?: string;
   CONTROL_PLANE_TOKEN: string;
   EMPLOYEE_OWNER_ID: string;
   ACCESS_ENABLED?: string;

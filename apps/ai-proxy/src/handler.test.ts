@@ -4,16 +4,20 @@ import type {
   AiCredential,
   AiCredentialStore,
   CreateCredentialInput,
-  UsageEvent,
+  UsageRecord,
 } from "./types.js";
 import type { AiProvider, AiProviderStore, SaveAiProvider } from "./provider-store.js";
 
 class MemoryStore implements AiCredentialStore {
   credentials = new Map<string, AiCredential>();
-  usage: UsageEvent[] = [];
+  usage: UsageRecord[] = [];
 
   async create(input: CreateCredentialInput): Promise<void> {
-    this.credentials.set(input.keyHash, { ...input, active: true });
+    this.credentials.set(input.keyHash, {
+      ...input,
+      dailyRequestBudget: input.dailyRequestBudget ?? null,
+      active: true,
+    });
   }
 
   async findByKeyHash(keyHash: string): Promise<AiCredential | null> {
@@ -27,12 +31,16 @@ class MemoryStore implements AiCredentialStore {
     return true;
   }
 
-  async countRecentRequests(appId: string): Promise<number> {
-    return this.usage.filter((event) => event.appId === appId).length;
+  async minuteCount(appId: string, minute: string): Promise<number> {
+    return this.usage.filter((record) => record.appId === appId && record.minute === minute).length;
   }
 
-  async recordUsage(event: UsageEvent): Promise<void> {
-    this.usage.push(event);
+  async dailyRequestTotal(appId: string, day: string): Promise<number> {
+    return this.usage.filter((record) => record.appId === appId && record.day === day).length;
+  }
+
+  async recordUsage(record: UsageRecord): Promise<void> {
+    this.usage.push(record);
   }
 }
 
@@ -196,6 +204,72 @@ describe("EZdeploy AI Proxy", () => {
       }),
     );
     expect(response.status).toBe(401);
+  });
+
+  it("records token usage from JSON upstream responses", async () => {
+    const store = new MemoryStore();
+    const handler = createAiProxyHandler({
+      store,
+      environment,
+      fetch: async () =>
+        Response.json({ choices: [], usage: { prompt_tokens: 12, completion_tokens: 7 } }),
+    });
+    const credential = await issueCredential(handler);
+    const response = await handler(
+      new Request("https://ai.example.test/v1/chat/completions", {
+        method: "POST",
+        headers: { authorization: `Bearer ${credential.virtualKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ model: "default-chat", messages: [] }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    expect(store.usage).toHaveLength(1);
+    expect(store.usage[0].inputTokens).toBe(12);
+    expect(store.usage[0].outputTokens).toBe(7);
+  });
+
+  it("enforces the daily request budget before calling the provider", async () => {
+    const store = new MemoryStore();
+    let upstreamCalls = 0;
+    const handler = createAiProxyHandler({
+      store,
+      environment,
+      fetch: async () => {
+        upstreamCalls += 1;
+        return Response.json({ ok: true });
+      },
+    });
+    const credential = await issueCredential(handler, { requestsPerMinute: 100, dailyRequestBudget: 1 });
+    const request = () =>
+      new Request("https://ai.example.test/v1/chat/completions", {
+        method: "POST",
+        headers: { authorization: `Bearer ${credential.virtualKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ model: "default-chat", messages: [] }),
+      });
+    expect((await handler(request())).status).toBe(200);
+    const blocked = await handler(request());
+    expect(blocked.status).toBe(429);
+    expect((await blocked.json() as { error: { code: string } }).error.code).toBe("daily_budget_exceeded");
+    expect(upstreamCalls).toBe(1);
+  });
+
+  it("returns 503 for all application traffic while the kill switch is on", async () => {
+    const store = new MemoryStore();
+    const handler = createAiProxyHandler({
+      store,
+      environment: { ...environment, AI_DISABLE: "true" },
+      fetch: async () => Response.json({ ok: true }),
+    });
+    const credential = await issueCredential(handler);
+    const response = await handler(
+      new Request("https://ai.example.test/v1/chat/completions", {
+        method: "POST",
+        headers: { authorization: `Bearer ${credential.virtualKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ model: "default-chat", messages: [] }),
+      }),
+    );
+    expect(response.status).toBe(503);
+    expect((await response.json() as { error: { code: string } }).error.code).toBe("ai_disabled");
   });
 
   it("stores a managed DeepSeek provider without returning its key and routes default-chat to it", async () => {

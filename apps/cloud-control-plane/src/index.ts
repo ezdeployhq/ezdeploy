@@ -1,6 +1,6 @@
 import { catalog, createDeployment, deploymentContext, setStatus } from "./db.js";
 import { activate, addEvent, resources } from "./db.js";
-import { createPagesRuntimeTail, deletePagesRuntimeTail, destroyApplicationResources, rollbackPages } from "./cloudflare.js";
+import { createPagesRuntimeTail, deletePagesRuntimeTail, destroyApplicationResources, rollbackPages, verifyApplication } from "./cloudflare.js";
 import type { DeploymentBundle, Environment, Manifest } from "./types.js";
 export { DeploymentWorkflow } from "./workflow.js";
 
@@ -106,7 +106,27 @@ async function deploymentPlan(manifest: Manifest) {
 
 const landing = `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EZdeploy 控制面</title><style>:root{font-family:Inter,system-ui;color:#effbf2;background:#07120b}body{margin:0;min-height:100vh;display:grid;place-items:center}.box{width:min(760px,calc(100% - 48px));padding:48px;border:1px solid #23452d;border-radius:24px;background:#0c1e12}h1{font-size:48px;margin:0 0 12px}.ok{color:#6ceb91}.links{display:flex;gap:12px;margin-top:28px}a{color:#07120b;background:#78ed9b;padding:11px 16px;border-radius:10px;text-decoration:none;font-weight:700}code{color:#9ff4b7}</style></head><body><main class="box"><div class="ok">● ONLINE</div><h1>EZdeploy 控制面</h1><p>个人应用中心的在线发布 API。构建由编码 Agent 完成，部署包进入 R2，状态写入 D1，并由 Cloudflare Workflow 完成发布、访问控制与健康检查。</p><p><code>POST /v1/deployments</code> · <code>GET /v1/apps</code> · <code>GET /v1/deployments/:id</code></p><div class="links"><a href="/health">运行状态</a><a href="${"APP_CENTER"}">应用中心</a></div></main></body></html>`;
 
+async function runScheduledHealthChecks(env: Environment) {
+  const rows = await env.DB.prepare(
+    "SELECT d.id,d.url,d.manifest_json,a.display_name FROM cloud_deployments d " +
+    "JOIN cloud_environments e ON e.active_deployment_id=d.id AND e.deleted_at IS NULL " +
+    "JOIN cloud_applications a ON a.id=d.application_id " +
+    "WHERE d.status='ready' AND d.url IS NOT NULL LIMIT 50",
+  ).all<{ id: string; url: string; manifest_json: string; display_name: string }>();
+  await Promise.all(rows.results.map(async (row) => {
+    try {
+      await verifyApplication(env, row.url, JSON.parse(row.manifest_json) as Manifest);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      await addEvent(env, row.id, "unhealthy", "Scheduled health check failed", { errorMessage: message });
+    }
+  }));
+}
+
 export default {
+  async scheduled(_controller: ScheduledController, env: Environment, ctx: ExecutionContext) {
+    ctx.waitUntil(runScheduledHealthChecks(env));
+  },
   async fetch(request: Request, env: Environment): Promise<Response> {
     const url = new URL(request.url);
     try {

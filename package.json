@@ -24,6 +24,7 @@
     "clean": "tsc -b --clean",
     "test": "vitest run",
     "preflight:cloudflare": "node scripts/cloudflare-preflight.mjs",
+    "setup:cloudflare": "node scripts/cloudflare-setup.mjs",
     "smoke:cloudflare": "npm run build && node scripts/cloudflare-smoke.mjs",
     "typecheck": "tsc -b --pretty false"
   },

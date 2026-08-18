@@ -4,6 +4,7 @@ export interface AiCredential {
   keyHash: string;
   allowedModels: string[];
   requestsPerMinute: number;
+  dailyRequestBudget: number | null;
   active: boolean;
 }
 
@@ -13,22 +14,35 @@ export interface CreateCredentialInput {
   keyHash: string;
   allowedModels: string[];
   requestsPerMinute: number;
+  dailyRequestBudget?: number | null;
 }
 
-export interface UsageEvent {
-  credentialId: string;
+export interface UsageRecord {
   appId: string;
+  minute: string;
+  day: string;
   modelAlias: string;
   upstreamModel: string;
   endpoint: string;
   statusCode: number;
-  createdAt: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export interface DailyUsage {
+  day: string;
+  modelAlias: string;
+  requests: number;
+  errors: number;
+  inputTokens: number;
+  outputTokens: number;
 }
 
 export interface AiCredentialStore {
   create(input: CreateCredentialInput): Promise<void>;
   findByKeyHash(keyHash: string): Promise<AiCredential | null>;
   revoke(id: string): Promise<boolean>;
-  countRecentRequests(appId: string, since: string): Promise<number>;
-  recordUsage(event: UsageEvent): Promise<void>;
+  minuteCount(appId: string, minute: string): Promise<number>;
+  dailyRequestTotal(appId: string, day: string): Promise<number>;
+  recordUsage(record: UsageRecord): Promise<void>;
 }

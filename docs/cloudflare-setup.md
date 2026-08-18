@@ -1,5 +1,35 @@
 # Cloudflare online production setup
 
+## One-command installation (recommended)
+
+Prerequisites: Node.js 22+, one Cloudflare account with your application domain as an
+active zone, and an account-scoped API token with `D1 Write`, `Pages Write`,
+`Workers R2 Storage Write`, `Workers AI Read`, and `DNS Write` for that zone (add
+`Access: Apps and Policies Write` only when enabling protected applications). A new
+account must activate R2 once in the dashboard before the first bucket can be
+created; activation may request a payment method, but usage within the current free
+allowance is not billed.
+
+```bash
+npm install
+npx wrangler login
+npm run setup:cloudflare
+```
+
+The script asks for the application domain suffix, zone, and API token, then creates
+or reuses the D1 database and R2 bucket, sets an R2 lifecycle rule that expires
+deployment bundles after 30 days, writes all four `apps/*/wrangler.json` files, runs
+migrations, deploys the four Workers, uploads the generated shared secrets, and
+prints the application-center URL. Generated shared secrets are stored locally in
+`.zaodeploy/setup-state.json` (mode 0600, git-ignored) so re-running the script
+keeps issued keys valid. The script is idempotent; re-run it after pulling new code
+to redeploy everything. Non-interactive use: set `EZD_YES=1` with `EZD_DOMAIN_SUFFIX`,
+`EZD_API_TOKEN`, and optionally `EZD_ACCOUNT_ID`/`EZD_ZONE_ID`.
+
+Open the printed application-center URL, create the only administrator account, and
+generate the first deployment prompt. The manual steps below remain as reference and
+for custom topologies.
+
 ## Topology
 
 EZdeploy production consists of four online Workers:
@@ -181,3 +211,52 @@ npm run smoke:cloudflare
 
 The smoke test covers D1, R2, an actual `default-chat` request, Access rejection, redeploy
 resource reuse, failed-release isolation, structured logs, rollback, and deletion cleanup.
+
+## Operations and maintenance
+
+### Continuous health monitoring
+
+The control-plane Worker runs a Cron Trigger every 30 minutes and re-verifies every
+`ready` application with the same authenticated health check used at deploy time.
+Failures are recorded as `unhealthy` events and appear on the application center's
+**Activity** page (`/activity`); the active release is never changed automatically.
+Adjust the schedule in `apps/cloud-control-plane/wrangler.json` under `triggers.crons`.
+
+### AI cost controls
+
+AI usage is aggregated into per-day rollups (requests, errors, input/output tokens)
+instead of per-request rows, so free-tier D1 write allowances and table growth stay
+bounded. Two additional guardrails are available:
+
+- Set `AI_DAILY_REQUEST_BUDGET` (for example `"500"`) in the control-plane Worker's
+  vars to cap each application's AI requests per day; the AI Proxy returns
+  `daily_budget_exceeded` once an application reaches the cap.
+- Set `AI_DISABLE` to `"true"` on the AI Proxy Worker to immediately stop all
+  application AI traffic (`503 ai_disabled`) without revoking individual keys.
+
+### D1 backups
+
+All control-plane state lives in the `ezdeploy-control` D1 database. Export a backup
+at any time with:
+
+```bash
+npx wrangler d1 export ezdeploy-control --remote --output ezdeploy-control-backup.sql
+```
+
+Cloudflare D1 Time Travel also restores the database to any point within the last
+30 days. Run exports before destructive operations such as renaming resources.
+
+### Database migrations in deployed applications
+
+Application migrations run before the new release is published and are not rolled
+back when a later step fails. Write migrations to be backward compatible with the
+currently active release (additive columns and new tables; avoid drops and
+renames), so a failed deploy never leaves the previous release broken.
+
+### Platform quotas worth knowing
+
+Cloudflare Workflows' free allowance includes a daily step budget (3,000 steps/day
+at the time of writing); one deployment typically consumes 20-70 steps depending on
+custom-domain activation time. Workers AI includes a free daily neuron allocation.
+Both reset daily and are ample for personal use, but batch-deploying many
+applications in one day can exhaust them.

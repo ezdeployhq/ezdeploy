@@ -1,6 +1,6 @@
 ---
-name: zaodeploy
-description: Inspect, plan, deploy, verify, troubleshoot, and remove supported internal web applications through the EZdeploy MCP server. Use when a user asks Codex to deploy or publish the current static, Vite/React, or Cloudflare Workers project; bind database, storage, AI, or organization access; retrieve a deployment URL or logs; redeploy; or remove a EZdeploy application.
+name: ezdeploy
+description: Inspect, plan, deploy, verify, troubleshoot, and remove supported internal web applications through the EZdeploy MCP server. Use when a user asks Codex to deploy or publish the current static, Vite/React, or Cloudflare Workers project; bind database, storage, AI, or organization access; retrieve a deployment URL or logs; redeploy; or remove an EZdeploy application.
 ---
 
 # EZdeploy

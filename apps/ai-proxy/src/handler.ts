@@ -9,6 +9,7 @@ export interface AiProxyEnvironment {
   CONTROL_PLANE_TOKEN: string;
   MODEL_ALIASES: string;
   AI_PROVIDER_ENCRYPTION_KEY?: string;
+  AI_DISABLE?: string;
 }
 
 export interface AiProxyDependencies {
@@ -112,9 +113,20 @@ export function createAiProxyHandler(dependencies: AiProxyDependencies) {
 
     const credential = await authorize(request, dependencies.store);
     if (credential instanceof Response) return credential;
-    const since = new Date(Date.now() - 60_000).toISOString();
+    if (dependencies.environment.AI_DISABLE === "true") {
+      return json({ error: { code: "ai_disabled", message: "AI access is disabled by the administrator" } }, 503);
+    }
+    const now = Date.now();
+    const minute = new Date(now).toISOString().slice(0, 16);
+    const day = new Date(now).toISOString().slice(0, 10);
     if (
-      (await dependencies.store.countRecentRequests(credential.appId, since)) >=
+      credential.dailyRequestBudget != null &&
+      (await dependencies.store.dailyRequestTotal(credential.appId, day)) >= credential.dailyRequestBudget
+    ) {
+      return json({ error: { code: "daily_budget_exceeded", message: "Application daily AI budget reached" } }, 429);
+    }
+    if (
+      (await dependencies.store.minuteCount(credential.appId, minute)) >=
       credential.requestsPerMinute
     ) {
       return json({ error: { code: "rate_limited", message: "Application AI limit exceeded" } }, 429);
@@ -173,14 +185,29 @@ export function createAiProxyHandler(dependencies: AiProxyDependencies) {
       body: JSON.stringify({ ...body, model: upstreamModel }),
     });
 
+    let inputTokens = 0;
+    let outputTokens = 0;
+    if ((upstreamResponse.headers.get("content-type") ?? "").includes("application/json")) {
+      const usage = await upstreamResponse
+        .clone()
+        .json()
+        .then((payload) => (payload as { usage?: Record<string, unknown> } | null)?.usage ?? null)
+        .catch(() => null);
+      if (usage) {
+        inputTokens = Number(usage.prompt_tokens ?? usage.input_tokens ?? 0) || 0;
+        outputTokens = Number(usage.completion_tokens ?? usage.output_tokens ?? 0) || 0;
+      }
+    }
     await dependencies.store.recordUsage({
-      credentialId: credential.id,
       appId: credential.appId,
+      minute,
+      day,
       modelAlias,
       upstreamModel,
       endpoint: url.pathname,
       statusCode: upstreamResponse.status,
-      createdAt: new Date().toISOString(),
+      inputTokens,
+      outputTokens,
     });
 
     const headers = new Headers(upstreamResponse.headers);
@@ -344,6 +371,7 @@ async function createCredential(
     appId?: string;
     allowedModels?: string[];
     requestsPerMinute?: number;
+    dailyRequestBudget?: number | null;
   };
   if (!body.appId || !Array.isArray(body.allowedModels) || body.allowedModels.length === 0) {
     return json({ error: { code: "invalid_request", message: "appId and allowedModels required" } }, 400);
@@ -360,6 +388,10 @@ async function createCredential(
     keyHash: await sha256(virtualKey),
     allowedModels: body.allowedModels,
     requestsPerMinute: Math.max(1, Math.min(body.requestsPerMinute ?? 60, 10_000)),
+    dailyRequestBudget:
+      typeof body.dailyRequestBudget === "number" && Number.isFinite(body.dailyRequestBudget)
+        ? Math.max(1, Math.min(Math.floor(body.dailyRequestBudget), 1_000_000))
+        : null,
   });
   return json({ credentialId: id, virtualKey }, 201);
 }

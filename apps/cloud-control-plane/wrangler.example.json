@@ -16,6 +16,7 @@
     "binding": "DEPLOY_WORKFLOW",
     "class_name": "DeploymentWorkflow"
   }],
+  "triggers": { "crons": ["*/30 * * * *"] },
   "vars": {
     "CLOUDFLARE_ACCOUNT_ID": "YOUR_CLOUDFLARE_ACCOUNT_ID",
     "CLOUDFLARE_ZONE_ID": "YOUR_CLOUDFLARE_ZONE_ID",
