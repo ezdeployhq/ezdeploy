@@ -5,6 +5,9 @@ public release is tagged.
 
 ## 0.1.0 - Unreleased
 
+- Added static-site deployment from the application center: upload a ZIP (up to 10 MiB,
+  root index.html required) and the catalog publishes it through the same plan-bound,
+  health-gated control-plane workflow used by Agent deployments.
 - Added `npm run setup:cloudflare`: an idempotent one-command installer that provisions D1/R2,
   sets R2 lifecycle rules for deployment bundles, writes Worker configuration, deploys all
   four Workers, and reuses locally stored shared secrets.

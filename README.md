@@ -95,7 +95,8 @@ The repository includes a deterministic mock for tests and a real Cloudflare ada
 - optional Cloudflare Access policies for protected applications;
 - immutable Pages artifacts, Worker version capture, and restoration;
 - a single-administrator application center plus MCP list, logs, rollback, and delete tools.
-- complete English and Simplified Chinese application-center routes with language-preserving navigation.
+- complete English and Simplified Chinese application-center routes with language-preserving navigation;
+- static-site deployment by ZIP upload from the application center for owners without an agent at hand.
 
 The mock provider must not be presented as production. A production installation requires a Cloudflare account and deployment of the AI Proxy when AI bindings are used. Cloudflare Zero Trust is optional and only needed for protected application access.
 

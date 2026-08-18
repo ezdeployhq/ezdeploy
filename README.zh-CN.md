@@ -80,7 +80,8 @@ skills/ezdeploy            Codex 部署工作流
 - 可选的 Cloudflare Access 受保护应用策略；
 - 不可变 Pages 构建产物、Worker 版本捕获和恢复；
 - 单管理员应用中心，以及 MCP 列表、日志、回滚和删除工具；
-- 完整的英文和简体中文应用中心路由，并在切换页面时保持当前语言。
+- 完整的英文和简体中文应用中心路由，并在切换页面时保持当前语言；
+- 支持在应用中心直接上传 ZIP 部署静态站点，手边没有 Agent 时也能发布。
 
 不能把 Mock Provider 当作生产环境。生产安装需要 Cloudflare 账号；使用 AI 资源绑定时还需要部署 AI Proxy。Cloudflare Zero Trust 是可选能力，仅在应用需要受保护访问时使用。
 

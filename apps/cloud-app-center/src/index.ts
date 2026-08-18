@@ -7,11 +7,13 @@ import {
   setupAdmin,
 } from "./auth.js";
 import { applicationPageFor, authPage, landingPageFor } from "./ui.js";
+import { bundleFromStaticZip, MAX_ZIP_BYTES } from "./upload.js";
 
 interface Env {
   DB: D1Database;
   AI_PROXY?: Fetcher;
   CONTROL_PLANE_URL: string;
+  CONTROL_PLANE_TOKEN: string;
   AGENT_GATEWAY_URL: string;
   AI_PROXY_URL: string;
   AI_ADMIN_TOKEN: string;
@@ -46,8 +48,9 @@ async function proxyAiAdmin(request: Request, env: Env, upstreamPath: string): P
   });
 }
 
-async function sha256(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+async function sha256(value: string | ArrayBuffer): Promise<string> {
+  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
@@ -123,6 +126,86 @@ async function listAiUsage(env: Env) {
     // Installations migrated before usage rollups existed have no ai_usage_daily table yet.
     return { available: false, days: [], models: [] };
   }
+}
+
+const uploadErrorMessages: Record<string, { zh: string; en: string }> = {
+  INVALID_NAME: { zh: "应用名称需要至少包含一个字母或数字", en: "The app name needs at least one letter or digit" },
+  INVALID_ZIP: { zh: "无法解压这个文件，请上传有效的 ZIP 压缩包", en: "Could not unzip this file; please upload a valid ZIP archive" },
+  EMPTY_ZIP: { zh: "压缩包里没有可部署的文件", en: "The archive contains no deployable files" },
+  TOO_MANY_FILES: { zh: "压缩包内文件超过 500 个", en: "The archive contains more than 500 files" },
+  NO_INDEX_HTML: { zh: "压缩包根目录需要包含 index.html", en: "The archive root must contain an index.html" },
+  EXTRACTED_TOO_LARGE: { zh: "解压后总大小超过 24 MiB", en: "Extracted content exceeds 24 MiB" },
+  INVALID_PATH: { zh: "压缩包内包含不安全的文件路径", en: "The archive contains unsafe file paths" },
+};
+
+async function uploadDeploy(request: Request, env: Env, locale: "zh" | "en") {
+  const url = new URL(request.url);
+  const local = (code: string) => uploadErrorMessages[code]?.[locale] ?? code;
+  const length = Number(request.headers.get("content-length") ?? 0);
+  if (length > MAX_ZIP_BYTES) {
+    return json({ error: { code: "ZIP_TOO_LARGE", message: locale === "en" ? "ZIP archives are limited to 10 MiB" : "ZIP 包不能超过 10 MiB" } }, 413);
+  }
+  const zip = new Uint8Array(await request.arrayBuffer());
+  if (zip.byteLength > MAX_ZIP_BYTES) {
+    return json({ error: { code: "ZIP_TOO_LARGE", message: locale === "en" ? "ZIP archives are limited to 10 MiB" : "ZIP 包不能超过 10 MiB" } }, 413);
+  }
+  let built: Awaited<ReturnType<typeof bundleFromStaticZip>>;
+  try {
+    built = await bundleFromStaticZip(url.searchParams.get("name") ?? "", zip);
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "INVALID_ZIP";
+    return json({ error: { code, message: local(code) } }, 400);
+  }
+  const controlPlane = env.CONTROL_PLANE_URL.replace(/\/$/, "");
+  const authorization = { authorization: `Bearer ${env.CONTROL_PLANE_TOKEN}` };
+  const planResponse = await fetch(`${controlPlane}/v1/plan`, {
+    method: "POST",
+    headers: { ...authorization, "content-type": "application/json" },
+    body: JSON.stringify(built.bundle.manifest),
+  });
+  if (!planResponse.ok) {
+    return json({ error: { code: "PLAN_FAILED", message: locale === "en" ? "The control plane rejected the deployment plan" : "控制面拒绝了部署计划" } }, 502);
+  }
+  const plan = await planResponse.json<{ planDigest: string }>();
+  const body = JSON.stringify(built.bundle);
+  const deployResponse = await fetch(`${controlPlane}/v1/deployments`, {
+    method: "POST",
+    headers: {
+      ...authorization,
+      "content-type": "application/json",
+      "x-zaodeploy-plan-digest": plan.planDigest,
+      "x-zaodeploy-source-sha256": await sha256(body),
+    },
+    body,
+  });
+  const result = await deployResponse.json<{ id?: string; error?: { code?: string; message?: string } }>()
+    .catch((): { id?: string; error?: { code?: string; message?: string } } => ({}));
+  if (!deployResponse.ok || !result.id) {
+    return json({
+      error: {
+        code: result.error?.code ?? "DEPLOY_FAILED",
+        message: result.error?.message ?? (locale === "en" ? "Deployment was rejected" : "部署被拒绝"),
+      },
+    }, deployResponse.ok ? 502 : deployResponse.status);
+  }
+  return json({ deploymentId: result.id, fileCount: built.fileCount, totalBytes: built.totalBytes }, 202);
+}
+
+async function uploadStatus(env: Env, id: string) {
+  const controlPlane = env.CONTROL_PLANE_URL.replace(/\/$/, "");
+  const response = await fetch(`${controlPlane}/v1/deployments/${id}`, {
+    headers: { authorization: `Bearer ${env.CONTROL_PLANE_TOKEN}` },
+  });
+  const target = await response.json<Record<string, unknown>>().catch((): Record<string, unknown> => ({}));
+  if (!response.ok) {
+    return json({ error: { code: "STATUS_UNAVAILABLE", message: "Deployment status unavailable" } }, 502);
+  }
+  return json({
+    status: target.status ?? "unknown",
+    url: target.url ?? null,
+    errorCode: target.error_code ?? null,
+    errorMessage: target.error_message ?? null,
+  });
 }
 
 export function buildAgentPrompt(code: string, env: Pick<Env, "AGENT_GATEWAY_URL">): string {
@@ -249,6 +332,9 @@ export default {
     if (url.pathname === "/api/apps") return json(await listApps(env));
     if (url.pathname === "/api/events") return json(await listEvents(env));
     if (url.pathname === "/api/ai-usage") return json(await listAiUsage(env));
+    if (url.pathname === "/api/upload-deploy" && request.method === "POST") return uploadDeploy(request, env, locale);
+    const uploadMatch = /^\/api\/upload-deploy\/([0-9a-f-]{36})$/.exec(url.pathname);
+    if (uploadMatch && request.method === "GET") return uploadStatus(env, uploadMatch[1]);
     if (url.pathname === "/api/me") return json({ username: admin.username, administrator: true });
     if (url.pathname.startsWith("/api/ai/providers")) {
       return proxyAiAdmin(request, env, url.pathname.replace("/api/ai", "/admin/v1"));

@@ -10,6 +10,7 @@
     "typecheck": "tsc -b --pretty false"
   },
   "dependencies": {
-    "@ezdeploy/core": "0.1.0"
+    "@ezdeploy/core": "0.1.0",
+    "fflate": "^0.8.3"
   }
 }

@@ -116,6 +116,8 @@ Inject `CLOUDFLARE_API_TOKEN`, `AI_CONTROL_TOKEN`, `CONTROL_PLANE_TOKEN`,
 `ACCESS_CLIENT_ID`, and `ACCESS_CLIENT_SECRET` with `wrangler secret put`. The AI Proxy also
 receives `AI_GATEWAY_TOKEN` and the matching `CONTROL_PLANE_TOKEN`. Never place these values in
 `vars`, an application repository, a browser bundle, or an MCP argument.
+The application center also receives the matching `CONTROL_PLANE_TOKEN` so the owner can
+deploy static sites from a ZIP upload in the catalog.
 
 When protected application deployment is enabled, protect these hostnames with Cloudflare Access:
 

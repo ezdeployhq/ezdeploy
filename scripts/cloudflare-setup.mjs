@@ -227,6 +227,7 @@ const secrets = [
   ["ai-proxy", "CONTROL_PLANE_TOKEN", state.controlPlaneToken],
   ["ai-proxy", "AI_PROVIDER_ENCRYPTION_KEY", state.aiEncryptionKey],
   ["cloud-app-center", "AI_ADMIN_TOKEN", state.controlPlaneToken],
+  ["cloud-app-center", "CONTROL_PLANE_TOKEN", state.controlPlaneToken],
 ];
 if (enableAccess) {
   if (!process.env.EZD_ACCESS_CLIENT_ID || !process.env.EZD_ACCESS_CLIENT_SECRET) {

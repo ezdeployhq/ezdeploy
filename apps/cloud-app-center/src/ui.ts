@@ -196,7 +196,7 @@ const zhApplicationPage = `<!doctype html>
   </div></header>
   <main>
     <section class="view" id="catalog">
-      <div class="page-head"><div><p class="eyebrow">APPLICATIONS</p><h1>我的应用</h1><p>打开已发布应用，查看当前状态与绑定能力。</p></div><a class="primary" href="/deploy" style="display:inline-flex;align-items:center;text-decoration:none">部署新应用</a></div>
+      <div class="page-head"><div><p class="eyebrow">APPLICATIONS</p><h1>我的应用</h1><p>打开已发布应用，查看当前状态与绑定能力。</p></div><div style="display:flex;gap:10px"><button class="secondary" id="uploadZip" type="button" style="align-self:center">上传 ZIP</button><a class="primary" href="/deploy" style="display:inline-flex;align-items:center;text-decoration:none">部署新应用</a></div></div>
       <div class="catalog-tools"><div class="search-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="search" id="search" placeholder="搜索应用或基础能力"></div><span class="count" id="count"></span></div>
       <div class="apps" id="apps"><div class="empty loading">正在读取应用目录…</div></div>
     </section>
@@ -223,6 +223,7 @@ const zhApplicationPage = `<!doctype html>
     </section>
   </main>
   <button class="primary mobile-create" id="mobileCreate">生成长期 Key</button>
+  <dialog id="uploadDialog"><div class="modal"><h2>上传静态站点</h2><p>选择一个包含 index.html 的 ZIP 压缩包（不超过 10 MiB），EZdeploy 会把它发布到你的应用域名下。</p><div class="form-grid"><div class="field wide"><label for="uploadName">应用名称</label><input id="uploadName" maxlength="50" placeholder="my-site"><div class="field-note">小写字母、数字和中划线；将决定子域名。</div></div><div class="field wide"><label for="uploadFile">ZIP 文件</label><input id="uploadFile" type="file" accept=".zip,application/zip"></div></div><div class="form-error" id="uploadError"></div><div class="field-note" id="uploadStatus"></div><div class="modal-actions"><button class="secondary" id="cancelUpload">取消</button><button class="primary" id="startUpload">开始部署</button></div></div></dialog>
   <dialog id="keyDialog"><div class="modal"><h2>长期部署 Key 已生成</h2><p>它只显示这一次。复制整段安装提示词给 Agent，之后直接说“部署到应用中心”即可。</p><div class="key"><code id="keyValue"></code><button class="copy" data-copy="keyValue">复制 Key</button></div><textarea class="prompt" id="agentPrompt" readonly></textarea><div class="modal-actions"><button class="secondary" id="done">关闭</button><button class="primary" data-copy="agentPrompt">复制安装提示词</button></div></div></dialog>
   <dialog class="provider-dialog" id="providerDialog"><form class="modal" id="providerForm"><h2 id="providerDialogTitle">添加 AI Provider</h2><p>选择预设可自动填写官方兼容地址和推荐模型，保存前不会发出模型请求。</p><input type="hidden" id="providerId"><div class="form-grid"><div class="field"><label for="providerType">Provider</label><select id="providerType"></select></div><div class="field"><label for="providerName">显示名称</label><input id="providerName" maxlength="80" required></div><div class="field wide"><label for="providerBaseUrl">OpenAI-compatible Base URL</label><input id="providerBaseUrl" type="url" required></div><div class="field wide"><label for="providerApiKey">API Key</label><input id="providerApiKey" type="password" autocomplete="new-password" placeholder="编辑时留空表示保持原密钥"><div class="field-note">密钥通过 TLS 发送到 AI Proxy，随后使用独立加密密钥保存。</div></div><div class="field"><label for="providerDefaultModel">默认模型</label><input id="providerDefaultModel" required></div><div class="field"><label for="providerModels">可用模型</label><input id="providerModels" placeholder="逗号分隔"></div><div class="field wide"><label class="check-line"><input id="providerEnabled" type="checkbox" checked>启用这个 Provider</label><label class="check-line"><input id="providerDefault" type="checkbox">设为默认 Chat Provider</label></div></div><div class="form-error" id="providerError"></div><div class="modal-actions"><button class="secondary" type="button" id="cancelProvider">取消</button><button class="primary" type="submit">保存配置</button></div></form></dialog>
   <script>
@@ -267,6 +268,11 @@ const zhApplicationPage = `<!doctype html>
     async function revokeConnection(id){if(!confirm('撤销后，这个 Agent 会话将立即失效。继续吗？'))return;await fetch('/api/connections/'+id,{method:'DELETE'});await loadConnections()}window.revokeConnection=revokeConnection;
     document.querySelectorAll('[data-copy]').forEach(button=>button.onclick=async()=>{const target=document.querySelector('#'+button.dataset.copy);await navigator.clipboard.writeText(target.value??target.textContent);const old=button.textContent;button.textContent='已复制';setTimeout(()=>button.textContent=old,1200)});
     document.querySelector('#done').onclick=()=>document.querySelector('#keyDialog').close();
+    const uploadDialog=document.querySelector('#uploadDialog');
+    document.querySelector('#uploadZip')?.addEventListener('click',()=>{document.querySelector('#uploadError').textContent='';document.querySelector('#uploadStatus').textContent='';uploadDialog.showModal()});
+    document.querySelector('#cancelUpload').onclick=()=>uploadDialog.close();
+    async function pollUpload(id){const statusEl=document.querySelector('#uploadStatus');for(let attempt=0;attempt<100;attempt++){await new Promise(resolve=>setTimeout(resolve,2500));const r=await fetch('/api/upload-deploy/'+id);if(!r.ok)continue;const data=await apiData(r);statusEl.textContent='部署中 · '+(data.status||'');if(data.status==='ready'&&data.url){uploadDialog.close();await loadApps();window.open(data.url,'_blank');return}if(data.status==='failed'){document.querySelector('#uploadError').textContent=data.errorMessage||'部署失败，可在事件用量页查看详情';statusEl.textContent='';return}}statusEl.textContent='部署时间较长，可稍后在事件用量页查看结果'}
+    document.querySelector('#startUpload').onclick=async()=>{const file=document.querySelector('#uploadFile').files[0];const name=document.querySelector('#uploadName').value.trim();const errorEl=document.querySelector('#uploadError');const statusEl=document.querySelector('#uploadStatus');errorEl.textContent='';if(!name){errorEl.textContent='请填写应用名称';return}if(!file){errorEl.textContent='请选择 ZIP 文件';return}if(file.size>10*1024*1024){errorEl.textContent='ZIP 包不能超过 10 MiB';return}statusEl.textContent='正在上传…';const r=await fetch('/api/upload-deploy?name='+encodeURIComponent(name),{method:'POST',headers:{'content-type':'application/zip'},body:file});const data=await apiData(r);if(!r.ok){errorEl.textContent=data.error?.message||'上传失败';statusEl.textContent='';return}statusEl.textContent='已上传 '+data.fileCount+' 个文件，正在部署…';pollUpload(data.deploymentId)};
     document.querySelector('#logout').onclick=async()=>{await fetch('/api/auth/logout',{method:'POST'});location.href='/login'};
     function formatTokens(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'k':String(n)}
     async function loadActivity(){
@@ -303,6 +309,16 @@ const authEnglishTranslations: Array<[string, string]> = [
 ];
 
 const applicationEnglishTranslations: Array<[string, string]> = [
+  ["选择一个包含 index.html 的 ZIP 压缩包（不超过 10 MiB），EZdeploy 会把它发布到你的应用域名下。", "Choose a ZIP archive containing index.html (up to 10 MiB); EZdeploy publishes it under your app domain."],
+  ["小写字母、数字和中划线；将决定子域名。", "Lowercase letters, digits, and hyphens; this decides the subdomain."],
+  ["部署失败，可在事件用量页查看详情", "Deployment failed; see the Activity page for details"],
+  ["部署时间较长，可稍后在事件用量页查看结果", "Deployment is taking a while; check the Activity page shortly"],
+  [" 个文件，正在部署…", " files, deploying…"], ["已上传 ", "Uploaded "],
+  ["请填写应用名称", "Enter an app name"], ["请选择 ZIP 文件", "Choose a ZIP file"],
+  ["ZIP 包不能超过 10 MiB", "ZIP archives are limited to 10 MiB"],
+  ["上传静态站点", "Upload a static site"], ["应用名称", "App name"], ["ZIP 文件", "ZIP file"],
+  ["开始部署", "Start deployment"], ["上传 ZIP", "Upload ZIP"], ["上传失败", "Upload failed"],
+  ["正在上传…", "Uploading…"], ["部署中 · ", "Deploying · "],
   ["最近的部署事件和 AI 用量汇总，用于排查失败原因并掌握成本。", "Recent deployment events and aggregated AI usage, for troubleshooting and cost awareness."],
   ["按天聚合的请求与 token 统计。每个应用的每分钟限额和每日预算由 AI Proxy 强制执行。", "Requests and tokens aggregated by day. Per-app per-minute limits and daily budgets are enforced by the AI Proxy."],
   ["AI 用量（近 30 天）", "AI usage (last 30 days)"],
