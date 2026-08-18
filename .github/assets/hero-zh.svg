@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 480" role="img" aria-label="EZdeploy：对编码 Agent 说一句部署到应用中心，确认计划，获得你自己域名下的健康链接。">
+  <defs>
+    <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
+      <path d="M44 0H0V44" fill="none" stroke="#17120f" stroke-opacity="0.14"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="480" fill="#f6821f"/>
+  <rect width="1200" height="480" fill="url(#grid)"/>
+
+  <g>
+    <rect x="63" y="55" width="300" height="30" fill="#ffac60" stroke="#17120f"/>
+    <circle cx="80" cy="70" r="5" fill="#17120f"/>
+    <text x="94" y="74" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="12" letter-spacing="1.5" fill="#17120f">AGENT 原生 &#183; 个人部署中心</text>
+  </g>
+
+  <text x="58" y="172" font-family="Inter,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-weight="900" font-size="76" letter-spacing="-2" fill="#17120f">一句话，</text>
+  <text x="58" y="252" font-family="Inter,-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" font-weight="900" font-size="76" letter-spacing="-2" fill="#fff8ef">应用就上线。</text>
+
+  <text x="63" y="302" font-family="Inter,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif" font-size="19" fill="#2b211c">安装一次 Skill，保存一个可撤销的长期 Key。以后对 Codex 或</text>
+  <text x="63" y="330" font-family="Inter,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif" font-size="19" fill="#2b211c">其他编码 Agent 说「部署到应用中心」，预览计划、确认资源，</text>
+  <text x="63" y="358" font-family="Inter,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif" font-size="19" fill="#2b211c">即可获得你自己域名下经过健康检查的正式链接。</text>
+
+  <g font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="12" fill="#17120f">
+    <rect x="63" y="392" width="92" height="28" fill="#fff8ef" stroke="#17120f"/><text x="81" y="410">WORKERS</text>
+    <rect x="165" y="392" width="72" height="28" fill="#fff8ef" stroke="#17120f"/><text x="187" y="410">PAGES</text>
+    <rect x="247" y="392" width="48" height="28" fill="#fff8ef" stroke="#17120f"/><text x="263" y="410">D1</text>
+    <rect x="305" y="392" width="48" height="28" fill="#fff8ef" stroke="#17120f"/><text x="321" y="410">R2</text>
+    <rect x="363" y="392" width="84" height="28" fill="#fff8ef" stroke="#17120f"/><text x="379" y="410">ACCESS</text>
+    <rect x="457" y="392" width="100" height="28" fill="#fff8ef" stroke="#17120f"/><text x="471" y="410">AI PROXY</text>
+  </g>
+
+  <g>
+    <rect x="716" y="100" width="420" height="296" fill="#fff8ef"/>
+    <rect x="704" y="88" width="420" height="296" fill="#17120f" stroke="#17120f" stroke-width="2"/>
+    <text x="728" y="120" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="12" fill="#8f8883">codex &#183; 当前项目</text>
+    <line x1="704" y1="134" x2="1124" y2="134" stroke="#ffffff" stroke-opacity="0.16"/>
+
+    <text x="728" y="168" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="14" fill="#ff9c4b">YOU</text>
+    <text x="772" y="168" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="14" fill="#eeeeee">部署到应用中心</text>
+
+    <text x="728" y="204" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="14" fill="#77d79a">EZDEPLOY</text>
+    <text x="826" y="204" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="14" fill="#eeeeee">已识别 Vite 应用</text>
+    <text x="728" y="230" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="14" fill="#c9c2bd">运行时 static &#183; 公开访问</text>
+    <text x="728" y="256" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="14" fill="#c9c2bd">绑定：D1 &#183; R2 &#183; 受限 AI Key</text>
+    <text x="728" y="282" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="14" fill="#c9c2bd">计划摘要 a94f21 &#8594; 已确认 &#10003;</text>
+
+    <text x="728" y="322" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="14" fill="#77d79a">&#10003; ready &#183; 健康检查通过</text>
+    <text x="728" y="348" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-weight="700" font-size="14" fill="#ffb16d">https://blog.apps.yourdomain.com</text>
+    <rect x="1058" y="336" width="10" height="16" fill="#f6821f"/>
+  </g>
+
+  <text x="63" y="452" font-family="ui-monospace,'SF Mono',Menlo,'PingFang SC',monospace" font-size="12" letter-spacing="1" fill="#17120f" opacity="0.75">开源 &#183; APACHE-2.0 &#183; 运行在你自己的 CLOUDFLARE 账户上</text>
+</svg>

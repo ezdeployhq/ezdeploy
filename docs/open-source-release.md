@@ -2,7 +2,7 @@
 
 ## Repository readiness
 
-- Repository created at `jingchang0623-crypto/ezdeploy`; keep it private through validation.
+- Repository created at `ezdeployhq/ezdeploy`; keep it private through validation.
 - Confirm that all code and assets can be distributed under Apache-2.0.
 - Run `npm run typecheck`, `npm test`, `npm run build`, and dependency review.
 - Run secret scanning against the complete Git history, not only the current files.

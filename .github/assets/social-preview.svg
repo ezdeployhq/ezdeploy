@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" role="img" aria-label="EZdeploy: agent-native personal application deployment center.">
+  <defs>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#17120f" stroke-opacity="0.14"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="640" fill="#f6821f"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+
+  <g>
+    <rect x="66" y="66" width="62" height="62" fill="#0d0a08"/>
+    <rect x="58" y="58" width="62" height="62" fill="#17120f"/>
+    <text x="89" y="106" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-weight="900" font-size="34" letter-spacing="-1" fill="#f6821f" text-anchor="middle">EZ</text>
+    <text x="140" y="105" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-weight="900" font-size="44" letter-spacing="-3" fill="#17120f">deploy</text>
+  </g>
+
+  <g>
+    <rect x="64" y="168" width="382" height="34" fill="#ffac60" stroke="#17120f" stroke-width="1.5"/>
+    <circle cx="84" cy="185" r="5.5" fill="#17120f"/>
+    <text x="100" y="190" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="14" letter-spacing="1.5" fill="#17120f">AGENT-NATIVE DEPLOYMENT CENTER</text>
+  </g>
+
+  <text x="62" y="330" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-weight="950" font-size="104" letter-spacing="-5" fill="#17120f">One sentence.</text>
+  <text x="62" y="440" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-weight="950" font-size="104" letter-spacing="-5" fill="#fff8ef">Your app is live.</text>
+
+  <text x="66" y="500" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-size="24" fill="#2b211c">Tell your coding agent &#8220;deploy to my app center.&#8221;</text>
+  <text x="66" y="534" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-size="24" fill="#2b211c">Preview, confirm, live on your own Cloudflare account.</text>
+
+  <g font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="13" fill="#17120f">
+    <rect x="66" y="570" width="98" height="32" fill="#fff8ef" stroke="#17120f"/><text x="86" y="591">WORKERS</text>
+    <rect x="176" y="570" width="76" height="32" fill="#fff8ef" stroke="#17120f"/><text x="200" y="591">PAGES</text>
+    <rect x="264" y="570" width="52" height="32" fill="#fff8ef" stroke="#17120f"/><text x="281" y="591">D1</text>
+    <rect x="328" y="570" width="52" height="32" fill="#fff8ef" stroke="#17120f"/><text x="345" y="591">R2</text>
+    <rect x="392" y="570" width="88" height="32" fill="#fff8ef" stroke="#17120f"/><text x="410" y="591">ACCESS</text>
+    <rect x="492" y="570" width="106" height="32" fill="#fff8ef" stroke="#17120f"/><text x="506" y="591">AI PROXY</text>
+  </g>
+
+  <g>
+    <rect x="806" y="180" width="400" height="330" fill="#fff8ef"/>
+    <rect x="792" y="166" width="400" height="330" fill="#17120f" stroke="#17120f" stroke-width="2"/>
+    <text x="818" y="200" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="13" fill="#8f8883">codex &#183; current project</text>
+    <line x1="792" y1="216" x2="1192" y2="216" stroke="#ffffff" stroke-opacity="0.16"/>
+
+    <text x="818" y="258" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="15" fill="#ff9c4b">YOU</text>
+    <text x="866" y="258" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="15" fill="#eeeeee">deploy to my app center</text>
+
+    <text x="818" y="300" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="15" fill="#77d79a">EZDEPLOY</text>
+    <text x="924" y="300" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="15" fill="#eeeeee">Vite app detected</text>
+    <text x="818" y="330" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="15" fill="#c9c2bd">runtime static &#183; public access</text>
+    <text x="818" y="360" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="15" fill="#c9c2bd">bindings: D1 &#183; R2 &#183; scoped AI key</text>
+    <text x="818" y="390" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-size="15" fill="#c9c2bd">plan digest a94f21 &#8594; confirmed &#10003;</text>
+
+    <text x="818" y="436" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="15" fill="#77d79a">&#10003; ready &#183; health verified</text>
+    <text x="818" y="466" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="15" fill="#ffb16d">https://blog.apps.yourdomain.com</text>
+    <rect x="1148" y="452" width="10" height="17" fill="#f6821f"/>
+  </g>
+</svg>

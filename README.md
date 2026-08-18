@@ -1,45 +1,29 @@
-# EZdeploy
+<p align="right">
+  <strong>English</strong> · <a href="./README.zh-CN.md">简体中文</a>
+</p>
 
-[English](./README.md) | [简体中文](./README.zh-CN.md)
+<p align="center">
+  <img src="./.github/assets/hero-en.svg" width="100%" alt="EZdeploy — tell your coding agent “deploy to my app center”, confirm the plan, and get a healthy URL on your own domain.">
+</p>
 
-[![CI](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml/badge.svg)](https://github.com/jingchang0623-crypto/ezdeploy/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
+<p align="center">
+  <a href="https://github.com/ezdeployhq/ezdeploy/actions/workflows/ci.yml"><img src="https://github.com/ezdeployhq/ezdeploy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
+  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome"></a>
+</p>
 
 EZdeploy is an open-source, agent-native personal application deployment center. Install its deployment Skill once, save one revocable persistent key, and then tell Codex, WorkBuddy, or another coding agent to **“deploy to my app center.”** The agent analyzes the project, previews the exact deployment plan, waits for confirmation, publishes it to your Cloudflare account, verifies application health, and returns a live URL on your own domain.
 
 The application center includes English and Simplified Chinese interfaces. Open `/en` for English or use the language switch on any page; both languages share the same administrator account, applications, deployment keys, and AI provider configuration.
 
-## Product boundary
+## Why EZdeploy
 
-The first release targets static sites, Vite/React, and Cloudflare Workers. Cloudflare Pages/Workers is the intended runtime; D1, R2, optional protected access, and an OpenAI-compatible AI proxy are resource bindings.
+- **One sentence to production.** Install once, save one key — every later deploy starts from a sentence, not a toolchain.
+- **You confirm before anything ships.** Every deployment previews provider, bindings, access scope, and risks, and execution is bound to the confirmed plan digest.
+- **Your infrastructure, your credentials.** Everything runs in your own Cloudflare account. Provider credentials live as Worker secrets and never enter an application repository or an agent prompt.
+- **Built to be found by agents.** The canonical workflow is discoverable through `agent.md`, the installable Skill, `skill.md`, `agents.md`, `llms.txt`, `/.well-known/ezdeploy.json`, and `openapi.json`.
 
-EZdeploy does not aim to become a general container platform, Kubernetes distribution, full CI/CD product, or database implementation.
-
-## Open-source status
-
-EZdeploy is being prepared for its first public `0.1.0` release under Apache-2.0. The core
-deployment workflow is implemented and tested; Cloudflare setup still requires operator-owned
-infrastructure and security review. The source repository is
-[jingchang0623-crypto/ezdeploy](https://github.com/jingchang0623-crypto/ezdeploy). See [CONTRIBUTING.md](./CONTRIBUTING.md),
-[SECURITY.md](./SECURITY.md), and the [release checklist](./docs/open-source-release.md).
-
-## Quick install
-
-One Cloudflare account is the only infrastructure requirement. New accounts must
-activate R2 once in the Cloudflare dashboard before the first bucket can be created;
-activation may request a payment method, but usage within the current free allowance
-is not billed.
-
-    npm install
-    npx wrangler login
-    npm run setup:cloudflare
-
-The script provisions D1 and R2, writes the Worker configuration, deploys all four
-Workers, uploads generated secrets, and prints your application-center URL. See
-[docs/cloudflare-setup.md](./docs/cloudflare-setup.md) for token permissions,
-non-interactive flags, and the equivalent manual steps.
-
-## Deployment contract
+## How it works
 
 Every deployment follows the same observable workflow:
 
@@ -60,6 +44,53 @@ Success requires a `ready` deployment and a verified `*.apps.example.com` URL wh
 personal application domain suffix is configured. Provider deployment IDs and fallback hosting URLs
 alone are not success.
 
+## Quick install
+
+One Cloudflare account is the only infrastructure requirement. New accounts must
+activate R2 once in the Cloudflare dashboard before the first bucket can be created;
+activation may request a payment method, but usage within the current free allowance
+is not billed.
+
+    npm install
+    npx wrangler login
+    npm run setup:cloudflare
+
+The script provisions D1 and R2, writes the Worker configuration, deploys all four
+Workers, uploads generated secrets, and prints your application-center URL. See
+[docs/cloudflare-setup.md](./docs/cloudflare-setup.md) for token permissions,
+non-interactive flags, and the equivalent manual steps.
+
+## Features
+
+The repository includes a deterministic mock for tests and a real Cloudflare adapter:
+
+- manifest validation and safe defaults;
+- explicit deployment state transitions;
+- resource-binding reuse across repeated deployments;
+- health-gated readiness and structured failures;
+- persisted control-plane events and structured provider errors;
+- explicit deletion with resource retention or removal;
+- Pages and Workers deployment with D1/R2 runtime bindings;
+- scoped AI virtual keys issued by an OpenAI-compatible proxy and injected as secrets;
+- optional Cloudflare Access policies for protected applications;
+- immutable Pages artifacts, Worker version capture, and restoration;
+- a single-administrator application center plus MCP list, logs, rollback, and delete tools;
+- complete English and Simplified Chinese application-center routes with language-preserving navigation;
+- ZIP upload for static sites straight from the application center, no agent required.
+
+The mock provider must not be presented as production. A production installation requires a Cloudflare account and deployment of the AI Proxy when AI bindings are used. Cloudflare Zero Trust is optional and only needed for protected application access.
+
+## Documentation
+
+| Document | What it covers |
+| --- | --- |
+| [docs/cloudflare-setup.md](./docs/cloudflare-setup.md) | Cloudflare tokens, Worker setup, non-interactive flags |
+| [docs/architecture.md](./docs/architecture.md) | Control plane, providers, and state machine design |
+| [docs/ai-provider-management.md](./docs/ai-provider-management.md) | DeepSeek, OpenAI, Anthropic, Gemini, OpenRouter, Workers AI |
+| [docs/account-management.md](./docs/account-management.md) | Single-admin account, sessions, and credential storage |
+| [docs/open-source-release.md](./docs/open-source-release.md) | Release checklist and repository hardening |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) · [SECURITY.md](./SECURITY.md) · [SUPPORT.md](./SUPPORT.md) | Community, vulnerability reports, and help |
+
 ## Repository layout
 
 ```text
@@ -79,26 +110,6 @@ The production control plane is fully online. A Worker stores applications, envi
 deployments, bindings, and events in D1; deployment bundles in R2; and long-running release
 steps in Cloudflare Workflows. Provider credentials are Worker secrets and never enter an
 application repository or Agent prompt.
-
-## Implemented vertical slice
-
-The repository includes a deterministic mock for tests and a real Cloudflare adapter:
-
-- manifest validation and safe defaults;
-- explicit deployment state transitions;
-- resource-binding reuse across repeated deployments;
-- health-gated readiness and structured failures;
-- persisted control-plane events and structured provider errors;
-- explicit deletion with resource retention or removal;
-- Pages and Workers deployment with D1/R2 runtime bindings;
-- scoped AI virtual keys issued by an OpenAI-compatible proxy and injected as secrets;
-- optional Cloudflare Access policies for protected applications;
-- immutable Pages artifacts, Worker version capture, and restoration;
-- a single-administrator application center plus MCP list, logs, rollback, and delete tools.
-- complete English and Simplified Chinese application-center routes with language-preserving navigation;
-- static-site deployment by ZIP upload from the application center for owners without an agent at hand.
-
-The mock provider must not be presented as production. A production installation requires a Cloudflare account and deployment of the AI Proxy when AI bindings are used. Cloudflare Zero Trust is optional and only needed for protected application access.
 
 ## Develop
 
@@ -129,8 +140,7 @@ workflow. Terminal-capable Agents download a versioned standalone client into an
 Remote MCP and an operator-published `@ezdeploy/agent` package remain optional enhanced
 distribution paths. No local
 control-plane daemon or owner-visible Cloudflare Access service credential is required.
-The same canonical workflow is discoverable through `agent.md`, the installable Skill, `skill.md`, `agents.md`,
-`llms.txt`, `/.well-known/ezdeploy.json`, and `openapi.json`. The old well-known path and
+The old well-known path and
 `ZAODEPLOY_*` environment variables are retained as stable legacy protocol identifiers.
 
 AI and organization access are opt-in control-plane capabilities; see [`.env.example`](./.env.example). The AI Proxy keeps the real model-provider key server-side and issues revocable per-application keys. Vite/static applications must call D1, R2, and AI through Pages Functions—never expose `ZAO_AI_API_KEY` to browser code.
@@ -158,6 +168,20 @@ npm --workspace @ezdeploy/app-center run dev
 
 When the application center origin is reachable only through Cloudflare Access, use `ZAODEPLOY_TRUST_CLOUDFLARE_ACCESS=true` instead of local token mode. Do not enable header-trust mode on an origin that can be reached directly.
 
+## Product boundary
+
+The first release targets static sites, Vite/React, and Cloudflare Workers. Cloudflare Pages/Workers is the intended runtime; D1, R2, optional protected access, and an OpenAI-compatible AI proxy are resource bindings.
+
+EZdeploy does not aim to become a general container platform, Kubernetes distribution, full CI/CD product, or database implementation.
+
+## Open-source status
+
+EZdeploy is being prepared for its first public `0.1.0` release under Apache-2.0. The core
+deployment workflow is implemented and tested; Cloudflare setup still requires operator-owned
+infrastructure and security review. The source repository is
+[ezdeployhq/ezdeploy](https://github.com/ezdeployhq/ezdeploy). See [CONTRIBUTING.md](./CONTRIBUTING.md),
+[SECURITY.md](./SECURITY.md), and the [release checklist](./docs/open-source-release.md).
+
 ## Manifest
 
 Start from [`ezdeploy.example.yaml`](./ezdeploy.example.yaml). The manifest is the durable source of deployment intent; chat history is not.
@@ -165,3 +189,4 @@ Start from [`ezdeploy.example.yaml`](./ezdeploy.example.yaml). The manifest is t
 ## License
 
 Apache-2.0.
+

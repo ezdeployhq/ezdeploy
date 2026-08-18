@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EZdeploy logo">
+  <rect width="512" height="512" fill="#f6821f"/>
+  <g>
+    <rect x="104" y="104" width="304" height="304" fill="#0d0a08"/>
+    <rect x="88" y="88" width="304" height="304" fill="#17120f" stroke="#17120f" stroke-width="2"/>
+    <text x="240" y="302" font-family="Inter,-apple-system,'Segoe UI',sans-serif" font-weight="900" font-size="148" letter-spacing="-4" fill="#f6821f" text-anchor="middle">EZ</text>
+    <text x="240" y="352" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" font-size="34" letter-spacing="4" fill="#fff8ef" text-anchor="middle">DEPLOY</text>
+  </g>
+</svg>

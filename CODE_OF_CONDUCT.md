@@ -9,5 +9,5 @@ acceptable. Maintainers may edit or remove contributions and temporarily or perm
 participants whose conduct is harmful to the community.
 
 Report conduct concerns privately to
-[@jingchang0623-crypto](https://github.com/jingchang0623-crypto). Maintainers will handle reports
+[@ezdeployhq](https://github.com/ezdeployhq). Maintainers will handle reports
 confidentially and avoid conflicts of interest when assigning a reviewer.
